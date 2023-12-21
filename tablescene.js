@@ -87,6 +87,7 @@ Promise.all([
         floor.rotation.set(-Math.PI / 2, 0, 0);
         floor.position.set(0, -15, 0); // Adjust the position as needed
         scene.add(floor);
+        
     });
 
     table.scale.set(0.08, 0.08, 0.08);
