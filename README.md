@@ -3,6 +3,10 @@
 update 21.12.23 15.00 - masa fps kontrolleri, duvar ve zemin texturelarını ekledim
 ama odaya benzemedi.
 
+
+
+
+
 how to run:
 install node.js ( install exe from node.js' webpage)
 
