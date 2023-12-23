@@ -1,0 +1,11 @@
+Model Information:
+* title:	Old Fluorescent Light
+* source:	https://sketchfab.com/3d-models/old-fluorescent-light-d01f22878869428192044f7ff297090a
+* author:	big guy (https://sketchfab.com/ondra.lit)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Old Fluorescent Light" (https://sketchfab.com/3d-models/old-fluorescent-light-d01f22878869428192044f7ff297090a) by big guy (https://sketchfab.com/ondra.lit) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

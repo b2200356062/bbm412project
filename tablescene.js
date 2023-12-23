@@ -9,6 +9,7 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
+import { RectAreaLightHelper }  from 'three/examples/jsm/helpers/RectAreaLightHelper.js';
 
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
@@ -127,8 +128,9 @@ var textureLoader = new THREE.TextureLoader().setPath('textures/');
 // ASYNC LOAD OBJECTS
 Promise.all([
     loadModel('table/scene.gltf'),
-    loadModel('hanging/scene.gltf')
-]).then(([table, lamp]) => {
+    loadModel('hanging/scene.gltf'),
+    loadModel('oldlamp/scene.gltf'),
+]).then(([table, lamp, newlamp]) => {
     
     // front wall
     textureLoader.load('texttable.png', function(texture) {
@@ -193,6 +195,14 @@ Promise.all([
         scene.add(ceiling);
     });
 
+    
+    newlamp.scale.set(0.3, 0.3, 0.3);
+    newlamp.position.set(0, 25, 10);
+    newlamp.rotation.set(0, Math.PI/2, 0)
+
+    scene.add(newlamp);
+
+
 
     table.scale.set(0.08, 0.08, 0.08);
     table.position.set(0, -15, 10);
@@ -201,10 +211,12 @@ Promise.all([
    
     lamp.scale.set(3, 3, 2);
     lamp.position.set(0, 25, 10);
-    scene.add(lamp);
+    //scene.add(lamp);
 
     enableShadows(table);
     enableShadows(lamp);
+    enableShadows(newlamp);
+
 }).catch((error) => {
     console.error(error);
 });
@@ -212,12 +224,20 @@ Promise.all([
 
 // LIGHTS
 //point light
-const pointlight = new THREE.PointLight(0xffffff, 100, 100);
+const pointlight = new THREE.PointLight(0xffffff, 1000, 100);
 pointlight.position.set(0,2,10);
 pointlight.castShadow = true;
 scene.add(pointlight);
-const pointlighthelper = new THREE.PointLightHelper( pointlight, 10, 0xff0000 );
-//scene.add( pointlighthelper );
+
+
+// const pointLight = new THREE.PointLight(0xffffff, 1000, 100); // Adjust color, intensity, and distance as needed
+// // Position the point light at the same location as the newlamp object
+// pointLight.position.set(0, 24, 10);
+// const pointlighthelper = new THREE.PointLightHelper( pointLight, 10, 0xff0000 );
+// scene.add( pointlighthelper );
+// // Add the point light to the scene
+// scene.add(pointLight);
+
 
 // const spotlight = new THREE.SpotLight(0xffffff, 10, 100, 0, 0.5, 1);
 // spotlight.position.set(0,0,0);
@@ -226,20 +246,18 @@ const pointlighthelper = new THREE.PointLightHelper( pointlight, 10, 0xff0000 );
 // const spotlighthelper = new THREE.SpotLightHelper( spotlight );
 // scene.add( spotlighthelper );
 
-// const rectlight = new THREE.RectAreaLight(0xffffff, 1, 100, 100);
-// rectlight.position.set(0, 25, 0);
-// rectlight.lookAt(0, 0, 0);
-// rectlight.castShadow = true;
-// scene.add(rectlight);
-// const rectlighthelper = new THREE.RectAreaLightHelper( rectlight );
-// scene.add( rectlighthelper );
+const rectlight = new THREE.RectAreaLight(0xffff00, 20, 25, 5);
+rectlight.position.set(0, 15, 10);
+rectlight.lookAt(0, 0, 10);
+scene.add(rectlight);
+
 
 // ambient light
 const ambientlight = new THREE.AmbientLight(0xffffff, 1);
 scene.add(ambientlight);
 
 // directional light
-const directionallight = new THREE.DirectionalLight(0xffffff, 2);
+const directionallight = new THREE.DirectionalLight(0xffffff, 5);
 directionallight.position.set(0, 24, 0);
 
 //directionallight.target.position.set(0,0,0);
@@ -333,6 +351,29 @@ gui.add({name: 'Point Light Intensity', value: pointlight.intensity}, 'value', 0
 .onChange(function(value) {
     pointlight.intensity = value;
 });
+
+// gui.add({name: 'Point Light X', value: pointLight.position.x}, 'value', -100, 100)
+// .name('Point Light X')
+// .onChange(function(value) {
+//     pointLight.position.x = value;
+// });
+
+// gui.add({name: 'Point Light Y', value: pointLight.position.y}, 'value', -100, 100)
+// .name('Point Light Y')
+// .onChange(function(value) {
+//     pointLight.position.y = value;
+// });
+
+// gui.add({name: 'Point Light Z', value: pointLight.position.z}, 'value', -100, 100)
+// .name('Point Light Z')
+// .onChange(function(value) {
+//     pointLight.position.z = value;
+// });
+// gui.add({name: 'Point Light Intensity', value: pointLight.intensity}, 'value', 0, 1000)
+// .name('Point Light Intensity')
+// .onChange(function(value) {
+//     pointLight.intensity = value;
+// });
 
 // shader for camera
 var customShader = {
@@ -448,6 +489,13 @@ camera.add( listener );
 // create a global audio source
 const sound = new THREE.Audio( listener );
 
+window.addEventListener('click', function() {
+    // Start the audio inside the event handler
+    if (!sound.isPlaying) {
+        sound.play();
+    }
+});
+
 // load a sound and set it as the Audio object's buffer
 const audioLoader = new THREE.AudioLoader();
 audioLoader.load( 'sounds/ambience.mp3', function( buffer ) {
@@ -456,12 +504,6 @@ audioLoader.load( 'sounds/ambience.mp3', function( buffer ) {
 	sound.setLoop( true );
 	sound.setVolume( 0.7 );
 	//sound.play();
-});
-window.addEventListener('click', function() {
-    // Start the audio inside the event handler
-    if (!sound.isPlaying) {
-        sound.play();
-    }
 });
 
 // 60 fps lock 
