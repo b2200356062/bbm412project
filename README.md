@@ -5,6 +5,8 @@ ama odaya benzemedi.
 
 update 22.12.23 17.19 - odaya benzedi ama mouse controlleri biraz jittery
 
+update 24.12.23 00.16 - point light direct light ve ambient light ekledim. artık masanın gölgeleri var ve tüm materyaller ışığa duyarlı
+
 
 
 
