@@ -217,7 +217,7 @@ pointlight.position.set(0,2,10);
 pointlight.castShadow = true;
 scene.add(pointlight);
 const pointlighthelper = new THREE.PointLightHelper( pointlight, 10, 0xff0000 );
-scene.add( pointlighthelper );
+//scene.add( pointlighthelper );
 
 // const spotlight = new THREE.SpotLight(0xffffff, 10, 100, 0, 0.5, 1);
 // spotlight.position.set(0,0,0);
