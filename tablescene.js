@@ -452,9 +452,16 @@ const sound = new THREE.Audio( listener );
 const audioLoader = new THREE.AudioLoader();
 audioLoader.load( 'sounds/ambience.mp3', function( buffer ) {
 	sound.setBuffer( buffer );
+    sound.autoplay = true;
 	sound.setLoop( true );
 	sound.setVolume( 0.7 );
-	sound.play();
+	//sound.play();
+});
+window.addEventListener('click', function() {
+    // Start the audio inside the event handler
+    if (!sound.isPlaying) {
+        sound.play();
+    }
 });
 
 // 60 fps lock 
