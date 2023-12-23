@@ -2,6 +2,7 @@
 
 update 21.12.23 15.00 - masa fps kontrolleri, duvar ve zemin texturelarını ekledim
 ama odaya benzemedi.
+
 update 22.12.23 17.19 - odaya benzedi ama mouse controlleri biraz jittery
 
 
