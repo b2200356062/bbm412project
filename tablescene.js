@@ -6,6 +6,11 @@ import Stats from "three/addons/libs/stats.module.js";
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { DragControls } from 'three/addons/controls/DragControls.js';
+import {TransformControls} from "three/examples/jsm/controls/TransformControls.js";
+import * as CANNON from 'cannon';
+
+
 
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
@@ -24,239 +29,174 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setClearColor(0x444444, 1); // arkaplan rengi
 
-const gltfLoader = new GLTFLoader();
 
-// Load ship
-// gltfLoader.load('textures/ships/scene.gltf', function(gltf) {
-//     // The loaded object is a group (or a scene), so you can just add it to your scene
-//     const mesh = gltf.scene;
-//     mesh.traverse((child) => {
-//         if (child.isMesh) {
-//             child.castShadow = true;
-//             child.receiveShadow = true;
-//         }
-//     })
-//     // If you want to adjust the position, scale, or rotation, you can do so here
-//     // For example:
-//     gltf.scene.position.set(10, 0, 10);
-//     // gltf.scene.scale.set(1, 1, 1);
-//     // gltf.scene.rotation.set(0, 0, 0);
-//     scene.add(mesh);
-// }, undefined, function(error) {
-//     console.error(error);
-// });
-
-// raw means no built in uniforms or attributes
-// let shadermaterial = new THREE.RawShaderMaterial({
-//     vertexShader: vertexShaderSource,
-//     fragmentShader: fragmentShaderSource
-// });
-
-
-
-// var texture = textureLoader.load('walltext.png');
-
-// LOADER FOR OBJ AND MTL FILES
-// Create the loaders
-// var mtlLoader = new MTLLoader();
-// var objLoader = new OBJLoader();
-
-// // Load the MTL file
-// mtlLoader.load('textures/OBJ/Wall_1.mtl', function(materials) {
-//     materials.preload();
-
-//     // Set the materials for the OBJ loader
-//     objLoader.setMaterials(materials);
-
-//     // Load the OBJ file
-//     objLoader.load('textures/OBJ/Wall_1.obj', function(object) {
-//         // Enable shadows for the object
-//         object.traverse(function(node) {
-//             if (node instanceof THREE.Mesh) {
-//                 node.castShadow = true;
-//                 node.receiveShadow = true;
-
-//                 if (node.geometry.attributes.uv) {
-//                     console.log('UVs:', node.geometry.attributes.uv.array);
-//                 } else {
-//                     console.log('No UVs found for this mesh');
-//                 }
-
-//             // Create a new material with the texture and apply it to the mesh
-//             var material = new THREE.MeshStandardMaterial({ map: texture });
-//             node.material = material;
-//             }
-//         });
-
-//         // Add the object to the scene
-//         scene.add(object);
-//     });
-// });
-
+var objects = [];
 
 // LOADS GLTF MODELS
-function loadModel(path) {
-    return new Promise((resolve, reject) => {
-        const loader = new GLTFLoader();
-        loader.load(path, (gltf) => {
-            resolve(gltf.scene);
-        }, (xhr) => {
-            console.log((xhr.loaded / xhr.total * 100) + " % loaded");
-        }, (error) => {
-            reject(error);
-        });
-    });
-}
+var table, newlamp, greenrock;
 
-// enable shadows for objects
-function enableShadows(gltf) {
-    gltf.traverse((node) => {
+// texture loader with set path of textures folder
+const loader = new GLTFLoader();
+loader.load('table/scene.gltf', function (gltf) {
+    table = gltf.scene;
+    table.traverse((node) => {
         if (node instanceof THREE.Mesh) {
             node.castShadow = true;
             //node.receiveShadow = true;
         }
     });
-}
+    table.scale.set(0.08, 0.08, 0.08);
+    table.position.set(0, -15, 10);
 
-// texture loader with set path of textures folder
-var textureLoader = new THREE.TextureLoader().setPath('textures/');
+    const tableShape = new CANNON.Plane();
+    const tableBody = new CANNON.Body({ mass: 0 }); // mass 0 makes the body static
+    tableBody.addShape(tableShape);
+    tableBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2); // Make the plane horizontal
+    world.addBody(tableBody);
 
-// ASYNC LOAD OBJECTS
-Promise.all([
-    loadModel('table/scene.gltf'),
-    loadModel('hanging/scene.gltf'),
-    loadModel('oldlamp/scene.gltf'),
-]).then(([table, lamp, newlamp]) => {
-    
-    // front wall
-    textureLoader.load('texttable.png', function(texture) {
-        // Create the geometry and material
-        var geometry = new THREE.PlaneGeometry(100, 70); // Adjust the size as needed
-        var material = new THREE.MeshStandardMaterial({ map: texture });
+    scene.add(table);
+});
 
-        // Create the mesh and add it to the scene
-        var wall = new THREE.Mesh(geometry, material);
-        wall.position.set(0, 20, -20); // Adjust the position as needed
-        scene.add(wall);
+loader.load('oldlamp/scene.gltf', function (gltf) {
+    newlamp = gltf.scene;
+    newlamp.traverse((node) => {
+        if (node instanceof THREE.Mesh) {
+            node.castShadow = true;
+            //node.receiveShadow = true;
+        }
     });
-
-    // left wall up
-    textureLoader.load('walltext.png', function(texture) {
-        var geometry = new THREE.PlaneGeometry(70, 70); 
-        var material = new THREE.MeshStandardMaterial({ map: texture });
-                        
-        var wall = new THREE.Mesh(geometry, material);
-        wall.position.set(-50, 20, 2); 
-        wall.rotation.set(0, Math.PI/2, 0);
-        scene.add(wall);
-    });
-
-
-    // right wall
-    textureLoader.load('walltext.png', function(texture) {
-        // Create the geometry and material
-        var geometry = new THREE.PlaneGeometry(70, 70); // Adjust the size as needed
-        var material = new THREE.MeshStandardMaterial({ map: texture });
-
-        // Create the mesh and add it to the scene
-        var wall = new THREE.Mesh(geometry, material);
-        wall.position.set(50, 20, 2); // Adjust the position as needed
-        wall.rotation.set(0, -Math.PI/2, 0);
-        scene.add(wall);
-    });
-
-    // floor texture
-    textureLoader.load('floortext.jpg', function(texture) {
-        // Create the geometry and material
-        var geometry = new THREE.PlaneGeometry(100, 70); // Adjust the size as needed
-        var material = new THREE.MeshStandardMaterial({ map: texture });
-
-        // Create the mesh and add it to the scene
-        var floor = new THREE.Mesh(geometry, material);
-        floor.rotation.set(-Math.PI / 2, 0, 0);
-        floor.receiveShadow = true;
-        floor.position.set(0, -15, 0); // Adjust the position as needed
-        scene.add(floor);
-    });
-
-    // ceiling texture
-    textureLoader.load('ceilingtext.png', function(texture) {
-        // Create the geometry and material
-        var geometry = new THREE.PlaneGeometry(100, 60); // Adjust the size as needed
-        var material = new THREE.MeshStandardMaterial({ map: texture });
-
-        var ceiling = new THREE.Mesh(geometry, material);
-        ceiling.rotation.set(Math.PI / 2, 0, 0);
-        ceiling.position.set(0, 55, 0); // Adjust the position as needed
-        scene.add(ceiling);
-    });
-
-    
     newlamp.scale.set(0.3, 0.3, 0.3);
     newlamp.position.set(0, 25, 10);
     newlamp.rotation.set(0, Math.PI/2, 0)
-
     scene.add(newlamp);
+});
 
+function loadModel(url) {
+    return new Promise((resolve, reject) => {
+        loader.load(url, (gltf) => {
+            resolve(gltf.scene);
+        }, undefined, reject);
+    });
+}
 
+let greenrockBody;
 
-    table.scale.set(0.08, 0.08, 0.08);
-    table.position.set(0, -15, 10);
-    scene.add(table);
+const world = new CANNON.World();
+world.gravity.set(0, -9.82, 0); // m/s²
 
-   
-    lamp.scale.set(3, 3, 2);
-    lamp.position.set(0, 25, 10);
-    //scene.add(lamp);
+loadModel('greenrock/scene.gltf').then((model) => {
+    greenrock = model;
+    greenrock.traverse((node) => {
+        if (node instanceof THREE.Mesh) {
+            node.castShadow = true;
+        }
+    });
+    greenrock.scale.set(1.5, 1.5, 1.5);
+    greenrock.position.set(0, 15, 10);
+    scene.add(greenrock);
 
-    enableShadows(table);
-    enableShadows(lamp);
-    enableShadows(newlamp);
+    // Create a box body for the greenrock
+    const greenrockShape = new CANNON.Box(new CANNON.Vec3(1, 1, 1)); // Replace with the actual size of the greenrock
+    greenrockBody = new CANNON.Body({ mass: 3}); // Replace with the actual mass of the greenrock
+    greenrockBody.addShape(greenrockShape);
+    greenrockBody.position.copy(greenrock.position);
+    world.addBody(greenrockBody);
 
+    // You can use greenrock and greenrockBody here
 }).catch((error) => {
-    console.error(error);
+    console.error('Error loading model:', error);
+});
+
+var textureLoader = new THREE.TextureLoader().setPath('textures/');
+
+// front wall
+textureLoader.load('texttable.png', function(texture) {
+    // Create the geometry and material
+    var geometry = new THREE.PlaneGeometry(100, 70); // Adjust the size as needed
+    var material = new THREE.MeshStandardMaterial({ map: texture });
+
+    // Create the mesh and add it to the scene
+    var wall = new THREE.Mesh(geometry, material);
+    wall.position.set(0, 20, -20); // Adjust the position as needed
+    scene.add(wall);
+});
+
+// left wall up
+textureLoader.load('walltext.png', function(texture) {
+    var geometry = new THREE.PlaneGeometry(70, 70); 
+    var material = new THREE.MeshStandardMaterial({ map: texture });
+                    
+    var wall = new THREE.Mesh(geometry, material);
+    wall.position.set(-50, 20, 2); 
+    wall.rotation.set(0, Math.PI/2, 0);
+    scene.add(wall);
 });
 
 
-// LIGHTS
-//point light
-const pointlight = new THREE.PointLight(0xffffff, 1000, 100);
-pointlight.position.set(0,2,10);
-pointlight.castShadow = true;
-scene.add(pointlight);
+// right wall
+textureLoader.load('walltext.png', function(texture) {
+    // Create the geometry and material
+    var geometry = new THREE.PlaneGeometry(70, 70); // Adjust the size as needed
+    var material = new THREE.MeshStandardMaterial({ map: texture });
 
+    // Create the mesh and add it to the scene
+    var wall = new THREE.Mesh(geometry, material);
+    wall.position.set(50, 20, 2); // Adjust the position as needed
+    wall.rotation.set(0, -Math.PI/2, 0);
+    scene.add(wall);
+});
 
-// const pointLight = new THREE.PointLight(0xffffff, 1000, 100); // Adjust color, intensity, and distance as needed
-// // Position the point light at the same location as the newlamp object
-// pointLight.position.set(0, 24, 10);
-// const pointlighthelper = new THREE.PointLightHelper( pointLight, 10, 0xff0000 );
-// scene.add( pointlighthelper );
-// // Add the point light to the scene
-// scene.add(pointLight);
+// floor texture
+textureLoader.load('floortext.jpg', function(texture) {
+    // Create the geometry and material
+    var geometry = new THREE.PlaneGeometry(100, 70); // Adjust the size as needed
+    var material = new THREE.MeshStandardMaterial({ map: texture });
 
+    // Create the mesh and add it to the scene
+    var floor = new THREE.Mesh(geometry, material);
+    floor.rotation.set(-Math.PI / 2, 0, 0);
+    floor.receiveShadow = true;
+    floor.position.set(0, -15, 0); // Adjust the position as needed
+    scene.add(floor);
+});
 
-// const spotlight = new THREE.SpotLight(0xffffff, 10, 100, 0, 0.5, 1);
-// spotlight.position.set(0,0,0);
-// spotlight.castShadow = true;
-// scene.add(spotlight);
-// const spotlighthelper = new THREE.SpotLightHelper( spotlight );
-// scene.add( spotlighthelper );
+// ceiling texture
+textureLoader.load('ceilingtext.png', function(texture) {
+    // Create the geometry and material
+    var geometry = new THREE.PlaneGeometry(100, 60); // Adjust the size as needed
+    var material = new THREE.MeshStandardMaterial({ map: texture });
 
+    var ceiling = new THREE.Mesh(geometry, material);
+    ceiling.rotation.set(Math.PI / 2, 0, 0);
+    ceiling.position.set(0, 55, 0); // Adjust the position as needed
+    scene.add(ceiling);
+});
+
+const spotlight = new THREE.SpotLight(0xffff00, 250, 20, Math.PI / 4, 0.25, 1);
+// Position the spotlight above the table
+spotlight.position.set(0, 10, 10);
+spotlight.castShadow = true;
+// Point the spotlight at the table
+spotlight.target.position.set(0, 0, 10);
+scene.add(spotlight);
+
+const spotlighthelper = new THREE.SpotLightHelper( spotlight );
+//scene.add( spotlighthelper );
+
+// ambient light
+const ambientlight = new THREE.AmbientLight(0xffffff, 2);
+scene.add(ambientlight);
+
+// light for the lamps emitting light
 const rectlight = new THREE.RectAreaLight(0xffff00, 20, 25, 5);
 rectlight.position.set(0, 15, 10);
 rectlight.lookAt(0, 0, 10);
 scene.add(rectlight);
 
 
-// ambient light
-const ambientlight = new THREE.AmbientLight(0xffffff, 1);
-scene.add(ambientlight);
-
 // directional light
 const directionallight = new THREE.DirectionalLight(0xffffff, 5);
 directionallight.position.set(0, 24, 0);
-
-//directionallight.target.position.set(0,0,0);
 directionallight.castShadow = true;
 
 // Adjust the shadow camera's frustum
@@ -280,96 +220,49 @@ stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
 const gui = new GUI();
+gui.width = 320;
 
-// gui.add({name: 'Spotlight X', value: spotlight.position.x}, 'value', -100, 100)
-//     .name('Spotlight X')
-//     .onChange(function(value) {
-//         spotlight.position.x = value;
-//     });
+gui.add({name: 'Spotlight X', value: spotlight.position.x}, 'value', -100, 100)
+    .name('Spotlight X')
+    .onChange(function(value) {
+        spotlight.position.x = value;
+    });
 
-// gui.add({name: 'Spotlight Y', value: spotlight.position.y}, 'value', -100, 100)
-//     .name('Spotlight Y')
-//     .onChange(function(value) {
-//         spotlight.position.y = value;
-//     });
+gui.add({name: 'Spotlight Y', value: spotlight.position.y}, 'value', -100, 100)
+    .name('Spotlight Y')
+    .onChange(function(value) {
+        spotlight.position.y = value;
+    });
 
-// gui.add({name: 'Spotlight Z', value: spotlight.position.z}, 'value', -100, 100)
-//     .name('Spotlight Z')
-//     .onChange(function(value) {
-//         spotlight.position.z = value;
-//     });
+gui.add({name: 'Spotlight Z', value: spotlight.position.z}, 'value', -100, 100)
+    .name('Spotlight Z')
+    .onChange(function(value) {
+        spotlight.position.z = value;
+    });
 
-// gui.add({name: 'Spotlight Intensity', value: spotlight.intensity}, 'value', 0, 1000)
-//     .name('Spotlight Intensity')
-//     .onChange(function(value) {
-//         spotlight.intensity = value;
-//     });
+    gui.add({name: 'Spotlight Rotation X', value: spotlight.target.position.x}, 'value', -90, 100)
+    .name('Spotlight Rotation X')
+    .onChange(function(value) {
+        spotlight.target.position.x = value;
+    });
 
-    
-gui.add({name: 'Directional Light X', value: directionallight.position.x}, 'value', -100, 100)
-.name('Directional Light X')
-.onChange(function(value) {
-    directionallight.position.x = value;
-});
+gui.add({name: 'Spotlight Rotation Y', value: spotlight.target.position.y}, 'value', -Math.PI, Math.PI)
+    .name('Spotlight Rotation Y')
+    .onChange(function(value) {
+        spotlight.target.position.y = value;
+    });
 
-gui.add({name: 'Directional Light Y', value: directionallight.position.y}, 'value', -100, 100)
-.name('Directional Light Y')
-.onChange(function(value) {
-    directionallight.position.y = value;
-});
+gui.add({name: 'Spotlight Rotation Z', value: spotlight.target.position.z}, 'value', -20, 20)
+    .name('Spotlight Rotation Z')
+    .onChange(function(value) {
+        spotlight.target.position.z = value;
+    });
 
-gui.add({name: 'Directional Light Z', value: directionallight.position.z}, 'value', -100, 100)
-.name('Directional Light Z')
-.onChange(function(value) {
-    directionallight.position.z = value;
-});
-
-gui.add({name: 'Point Light X', value: pointlight.position.x}, 'value', -100, 100)
-.name('Point Light X')
-.onChange(function(value) {
-    pointlight.position.x = value;
-});
-
-gui.add({name: 'Point Light Y', value: pointlight.position.y}, 'value', -100, 100)
-.name('Point Light Y')
-.onChange(function(value) {
-    pointlight.position.y = value;
-});
-
-gui.add({name: 'Point Light Z', value: pointlight.position.z}, 'value', -100, 100)
-.name('Point Light Z')
-.onChange(function(value) {
-    pointlight.position.z = value;
-});
-
-gui.add({name: 'Point Light Intensity', value: pointlight.intensity}, 'value', 0, 1000)
-.name('Point Light Intensity')
-.onChange(function(value) {
-    pointlight.intensity = value;
-});
-
-// gui.add({name: 'Point Light X', value: pointLight.position.x}, 'value', -100, 100)
-// .name('Point Light X')
-// .onChange(function(value) {
-//     pointLight.position.x = value;
-// });
-
-// gui.add({name: 'Point Light Y', value: pointLight.position.y}, 'value', -100, 100)
-// .name('Point Light Y')
-// .onChange(function(value) {
-//     pointLight.position.y = value;
-// });
-
-// gui.add({name: 'Point Light Z', value: pointLight.position.z}, 'value', -100, 100)
-// .name('Point Light Z')
-// .onChange(function(value) {
-//     pointLight.position.z = value;
-// });
-// gui.add({name: 'Point Light Intensity', value: pointLight.intensity}, 'value', 0, 1000)
-// .name('Point Light Intensity')
-// .onChange(function(value) {
-//     pointLight.intensity = value;
-// });
+gui.add({name: 'Spotlight Intensity', value: spotlight.intensity}, 'value', 0, 1000)
+    .name('Spotlight Intensity')
+    .onChange(function(value) {
+        spotlight.intensity = value;
+    });
 
 // shader for camera
 var customShader = {
@@ -417,7 +310,7 @@ camera.rotation.set(0, 0, 0);
 camera.position.set(0, 0, 0);
 
 // Adjust the camera's near and far values
-camera.near = 0.1;
+camera.near = 0.01;
 camera.far = 1000;
 camera.updateProjectionMatrix();
 
@@ -428,10 +321,12 @@ pitchObject.add(camera);
 // Add yawObject to the scene instead of the camera
 scene.add(yawObject);
 
-// Update the mouse position
-document.addEventListener('click', function() {
-    document.body.requestPointerLock();
-}, false);
+
+//Update the mouse position
+// document.addEventListener('click', function() {
+//     document.body.requestPointerLock();
+// }, false);
+
 
 // Update the camera rotation when the mouse moves
 document.addEventListener('mousemove', function(event) {
@@ -479,28 +374,48 @@ window.addEventListener('keydown', (event) =>{
             break;
     }
 });
-const listener = new THREE.AudioListener();
-camera.add( listener );
 
-// create a global audio source
-const sound = new THREE.Audio( listener );
+let isDragging = false;
 
-window.addEventListener('click', function() {
-    // Start the audio inside the event handler
-    if (!sound.isPlaying) {
-        sound.play();
+const dragcontrols = new DragControls(objects, camera, renderer.domElement);
+const transformcontrols = new TransformControls(camera, renderer.domElement);
+
+scene.add(transformcontrols);
+
+dragcontrols.addEventListener('dragstart', function (event) {
+    event.object.material.emissive.set(0xffffff);
+    greenrockBody.type = CANNON.Body.KINEMATIC;
+    isDragging = true;
+});
+
+dragcontrols.addEventListener('drag', function (event) {
+    // When you drag the object, update the position of the physics body to match the position of the object
+    greenrockBody.position.copy(greenrock.position);
+});
+
+dragcontrols.addEventListener('dragend', function (event) {
+    event.object.material.emissive.set(0x000000);
+    greenrockBody.type = CANNON.Body.DYNAMIC;
+    isDragging = false;
+});
+
+dragcontrols.addEventListener('hoveron', function (event) {
+    console.log("üstündeyim");
+})
+
+// Listen for mousedown events
+renderer.domElement.addEventListener('mousedown', function (event) {
+    if (isDragging) {
+        transformcontrols.attach(dragcontrols.object);
+        transformcontrols.setMode('rotate');
     }
 });
 
-// load a sound and set it as the Audio object's buffer
-const audioLoader = new THREE.AudioLoader();
-audioLoader.load( 'sounds/ambience.mp3', function( buffer ) {
-	sound.setBuffer( buffer );
-    sound.autoplay = true;
-	sound.setLoop( true );
-	sound.setVolume( 0.7 );
-	//sound.play();
+// Listen for mouseup events
+renderer.domElement.addEventListener('mouseup', function (event) {
+    transformcontrols.detach();
 });
+
 
 // 60 fps lock 
 let then = performance.now();
@@ -519,6 +434,13 @@ function render(now){
 
     const tick = () =>{
         stats.begin();
+        world.step(1 / 60);
+
+        if (greenrock && greenrockBody) {
+            greenrock.position.copy(greenrockBody.position);
+            greenrock.quaternion.copy(greenrockBody.quaternion);
+        }
+
         composer.render();
         stats.end();
     }
