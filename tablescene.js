@@ -6,10 +6,6 @@ import Stats from "three/addons/libs/stats.module.js";
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
-import { RectAreaLightHelper }  from 'three/examples/jsm/helpers/RectAreaLightHelper.js';
 
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;

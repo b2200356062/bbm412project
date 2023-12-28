@@ -20,7 +20,7 @@ class OutputStructNode extends Node {
 		const members = this.members;
 		const types = [];
 
-		for ( let i = 0; i < members.length; i++ ) {
+		for ( let i = 0; i < members.length; i ++ ) {
 
 			types.push( members[ i ].getNodeType( builder ) );
 
@@ -32,7 +32,7 @@ class OutputStructNode extends Node {
 
 	generate( builder, output ) {
 
-		const nodeVar = builder.getVarFromNode( this, this.nodeType );
+		const nodeVar = builder.getVarFromNode( this );
 		nodeVar.isOutputStructVar = true;
 
 		const propertyName = builder.getPropertyName( nodeVar );
@@ -41,11 +41,11 @@ class OutputStructNode extends Node {
 
 		const structPrefix = propertyName !== '' ? propertyName + '.' : '';
 
-		for ( let i = 0; i < members.length; i++ ) {
+		for ( let i = 0; i < members.length; i ++ ) {
 
 			const snippet = members[ i ].build( builder, output );
 
-			builder.addLineFlowCode( `${structPrefix}m${i} = ${snippet}` );
+			builder.addLineFlowCode( `${ structPrefix }m${ i } = ${ snippet }` );
 
 		}
 
