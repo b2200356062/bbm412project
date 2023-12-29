@@ -169,3 +169,45 @@
 //     sound.setLoop(true);
 //     sound.setVolume(0.7);
 // });
+
+
+// COLLISION WITH DRAG ( WORKING )
+// let isDragging = false;
+// let isPhysicsPaused = false;
+
+// let plane = new THREE.Plane();
+// let raycaster = new THREE.Raycaster();
+// let offset = new THREE.Vector3();
+// let intersection = new THREE.Vector3();
+// let mouse = new THREE.Vector2();
+
+// renderer.domElement.addEventListener('mousedown', function(event) {
+//     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+//     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+//     raycaster.setFromCamera(mouse, camera);
+//     if (raycaster.ray.intersectBox(new THREE.Box3().setFromObject(greenrock), intersection)) {
+//         isDragging = true;
+//         isPhysicsPaused = true;
+//         plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(plane.normal), intersection);
+//         if (raycaster.ray.intersectPlane(plane, intersection)) {
+//             offset.copy(intersection).sub(greenrock.position);
+//         }
+//     }
+// });
+
+// renderer.domElement.addEventListener('mousemove', function(event) {
+//     if (!isDragging) return;
+//     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+//     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+//     raycaster.setFromCamera(mouse, camera);
+//     if (raycaster.ray.intersectPlane(plane, intersection)) {
+//         greenrock.position.copy(intersection.sub(offset));
+//         greenrockBody.position.copy(greenrock.position);
+//     }
+// });
+
+// renderer.domElement.addEventListener('mouseup', function(event) {
+//     isDragging = false;
+//     isPhysicsPaused = false;
+//     greenrockBody.type = CANNON.Body.DYNAMIC; // Set the body back to dynamic when the drag ends
+// });

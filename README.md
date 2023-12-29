@@ -11,6 +11,8 @@ update 24.12.23 01.07- lambayı değiştirip emit etmesi için sarı ısık ekle
 
 update 28.12.23 18.26 - cannon js kütüphanesi ile gravity ekledim. masanın collision shapeini ayarlamak kaldı. drag controller ile objeyi sürükleme var ama pointer lock ile calısmıyor. ve collision da direkt iptal etti. yarın çözmeyi denicem.
 
+update 29.12.23 15.02 - collision shapelerini ayarladım. artık objeleri kutunun içine bıraktığında yok oluyor. fizikler ve gravity doğru calısıyor. objeyi tutup kaldırınca geri düşüyor.
+
 how to run:
 install node.js ( install exe from node.js' webpage)
 

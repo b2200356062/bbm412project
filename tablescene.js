@@ -10,10 +10,9 @@ import { DragControls } from 'three/addons/controls/DragControls.js';
 import {TransformControls} from "three/examples/jsm/controls/TransformControls.js";
 import * as CANNON from 'cannon';
 
-
-
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
+
 // canvas 
 const canvas = document.querySelector('#canvas');
 const scene = new THREE.Scene();
@@ -30,10 +29,13 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setClearColor(0x444444, 1); // arkaplan rengi
 
 
+// objects
 var objects = [];
+var table, newlamp, greenrock, bin;
 
-// LOADS GLTF MODELS
-var table, newlamp, greenrock;
+// world for physics
+const world = new CANNON.World();
+world.gravity.set(0, -9.82, 0); // m/s²
 
 // texture loader with set path of textures folder
 const loader = new GLTFLoader();
@@ -42,16 +44,23 @@ loader.load('table/scene.gltf', function (gltf) {
     table.traverse((node) => {
         if (node instanceof THREE.Mesh) {
             node.castShadow = true;
-            //node.receiveShadow = true;
+            node.receiveShadow = true;
         }
     });
-    table.scale.set(0.08, 0.08, 0.08);
+    table.scale.set(0.05, 0.08, 0.08);
     table.position.set(0, -15, 10);
 
-    const tableShape = new CANNON.Plane();
-    const tableBody = new CANNON.Body({ mass: 0 }); // mass 0 makes the body static
+    // Calculate the bounding box of the table
+    const box = new THREE.Box3().setFromObject(table);
+    const size = box.getSize(new THREE.Vector3());
+
+    // Create a box shape for the table with the actual size of the table
+    const tableShape = new CANNON.Box(new CANNON.Vec3(size.x / 2.2, size.y / 1.3, size.z/2));
+
+    // Create a body for the table and add the shape to it
+    const tableBody = new CANNON.Body({ mass: 0 }); // The table is static, so its mass is 0
     tableBody.addShape(tableShape);
-    tableBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2); // Make the plane horizontal
+    tableBody.position.copy(table.position);
     world.addBody(tableBody);
 
     scene.add(table);
@@ -61,7 +70,7 @@ loader.load('oldlamp/scene.gltf', function (gltf) {
     newlamp = gltf.scene;
     newlamp.traverse((node) => {
         if (node instanceof THREE.Mesh) {
-            node.castShadow = true;
+            //node.castShadow = true;
             //node.receiveShadow = true;
         }
     });
@@ -71,6 +80,8 @@ loader.load('oldlamp/scene.gltf', function (gltf) {
     scene.add(newlamp);
 });
 
+
+// async loader for greenrock 
 function loadModel(url) {
     return new Promise((resolve, reject) => {
         loader.load(url, (gltf) => {
@@ -81,9 +92,6 @@ function loadModel(url) {
 
 let greenrockBody;
 
-const world = new CANNON.World();
-world.gravity.set(0, -9.82, 0); // m/s²
-
 loadModel('greenrock/scene.gltf').then((model) => {
     greenrock = model;
     greenrock.traverse((node) => {
@@ -92,8 +100,9 @@ loadModel('greenrock/scene.gltf').then((model) => {
         }
     });
     greenrock.scale.set(1.5, 1.5, 1.5);
-    greenrock.position.set(0, 15, 10);
+    greenrock.position.set(0, 5, 10);
     scene.add(greenrock);
+    objects.push(greenrock);
 
     // Create a box body for the greenrock
     const greenrockShape = new CANNON.Box(new CANNON.Vec3(1, 1, 1)); // Replace with the actual size of the greenrock
@@ -107,27 +116,73 @@ loadModel('greenrock/scene.gltf').then((model) => {
     console.error('Error loading model:', error);
 });
 
+
+// bounding box for greenrock for debugging
+// const boxGeometry = new THREE.BoxGeometry(2, 2, 2); // The size should be twice the size of the Cannon.js Vec3
+// const boxMaterial = new THREE.MeshBasicMaterial({wireframe: true, color: 0xff0000});
+// const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+// scene.add(boxMesh);
+
+
+var binBody, recycleBinMesh;
+
+// recycle bin
+loader.load('cop/scene.gltf', function (gltf) {
+    bin = gltf.scene;
+    bin.traverse((node) => {
+        if (node instanceof THREE.Mesh) {
+            node.castShadow = true;
+            node.receiveShadow = true;
+        }
+    });
+    bin.scale.set(0.08, 0.08, 0.08);
+    bin.position.set(17,-10, 17);
+    
+    scene.add(bin);
+
+    const box = new THREE.Box3().setFromObject(bin);
+    const size = box.getSize(new THREE.Vector3());
+
+    const recycleBinShape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
+    binBody = new CANNON.Body({ mass: 0 }); // The recycle bin is static, so its mass is 0
+    binBody.addShape(recycleBinShape);
+    binBody.position.copy(bin.position);
+    world.addBody(binBody);
+
+
+    // // Create a box geometry for the recycle bin
+    // const recycleBinGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+    // const recycleBinMaterial = new THREE.MeshBasicMaterial({wireframe: true, color: 0xff0000});
+    // recycleBinMesh = new THREE.Mesh(recycleBinGeometry, recycleBinMaterial);
+    // recycleBinMesh.position.copy(binBody.position);
+    // console.log('Size:', size.x, size.y, size.z);
+    // scene.add(recycleBinMesh);
+});
+
+    
+
+// TEXTURES
 var textureLoader = new THREE.TextureLoader().setPath('textures/');
 
 // front wall
 textureLoader.load('texttable.png', function(texture) {
     // Create the geometry and material
-    var geometry = new THREE.PlaneGeometry(100, 70); // Adjust the size as needed
+    var geometry = new THREE.PlaneGeometry(100, 50); // Adjust the size as needed
     var material = new THREE.MeshStandardMaterial({ map: texture });
 
     // Create the mesh and add it to the scene
     var wall = new THREE.Mesh(geometry, material);
-    wall.position.set(0, 20, -20); // Adjust the position as needed
+    wall.position.set(0, 10, -15); // Adjust the position as needed
     scene.add(wall);
 });
 
 // left wall up
 textureLoader.load('walltext.png', function(texture) {
-    var geometry = new THREE.PlaneGeometry(70, 70); 
+    var geometry = new THREE.PlaneGeometry(70, 50); 
     var material = new THREE.MeshStandardMaterial({ map: texture });
                     
     var wall = new THREE.Mesh(geometry, material);
-    wall.position.set(-50, 20, 2); 
+    wall.position.set(-50, 10, 0); 
     wall.rotation.set(0, Math.PI/2, 0);
     scene.add(wall);
 });
@@ -136,12 +191,12 @@ textureLoader.load('walltext.png', function(texture) {
 // right wall
 textureLoader.load('walltext.png', function(texture) {
     // Create the geometry and material
-    var geometry = new THREE.PlaneGeometry(70, 70); // Adjust the size as needed
+    var geometry = new THREE.PlaneGeometry(70, 50); // Adjust the size as needed
     var material = new THREE.MeshStandardMaterial({ map: texture });
 
     // Create the mesh and add it to the scene
     var wall = new THREE.Mesh(geometry, material);
-    wall.position.set(50, 20, 2); // Adjust the position as needed
+    wall.position.set(50, 10, 0); // Adjust the position as needed
     wall.rotation.set(0, -Math.PI/2, 0);
     scene.add(wall);
 });
@@ -149,33 +204,45 @@ textureLoader.load('walltext.png', function(texture) {
 // floor texture
 textureLoader.load('floortext.jpg', function(texture) {
     // Create the geometry and material
-    var geometry = new THREE.PlaneGeometry(100, 70); // Adjust the size as needed
+    var geometry = new THREE.PlaneGeometry(100, 50); // Adjust the size as needed
     var material = new THREE.MeshStandardMaterial({ map: texture });
 
     // Create the mesh and add it to the scene
     var floor = new THREE.Mesh(geometry, material);
     floor.rotation.set(-Math.PI / 2, 0, 0);
     floor.receiveShadow = true;
-    floor.position.set(0, -15, 0); // Adjust the position as needed
+    floor.position.set(0, -15, 10); // Adjust the position as needed
     scene.add(floor);
+
+    let box = new THREE.Box3().setFromObject(floor);
+    let size = box.getSize(new THREE.Vector3());
+
+    // Create a box shape for the table with the actual size of the table
+    const floorshape = new CANNON.Box(new CANNON.Vec3(size.x, size.y, size.z));
+
+    // Create a body for the table and add the shape to it
+    const floorbody = new CANNON.Body({ mass: 0 }); // The table is static, so its mass is 0
+    floorbody.addShape(floorshape);
+    floorbody.position.copy(floor.position);
+    world.addBody(floorbody);
 });
 
 // ceiling texture
 textureLoader.load('ceilingtext.png', function(texture) {
     // Create the geometry and material
-    var geometry = new THREE.PlaneGeometry(100, 60); // Adjust the size as needed
+    var geometry = new THREE.PlaneGeometry(100, 50); // Adjust the size as needed
     var material = new THREE.MeshStandardMaterial({ map: texture });
 
     var ceiling = new THREE.Mesh(geometry, material);
     ceiling.rotation.set(Math.PI / 2, 0, 0);
-    ceiling.position.set(0, 55, 0); // Adjust the position as needed
+    ceiling.position.set(0, 35, 10); // Adjust the position as needed
     scene.add(ceiling);
 });
 
 const spotlight = new THREE.SpotLight(0xffff00, 250, 20, Math.PI / 4, 0.25, 1);
 // Position the spotlight above the table
 spotlight.position.set(0, 10, 10);
-spotlight.castShadow = true;
+//spotlight.castShadow = true;
 // Point the spotlight at the table
 spotlight.target.position.set(0, 0, 10);
 scene.add(spotlight);
@@ -200,10 +267,10 @@ directionallight.position.set(0, 24, 0);
 directionallight.castShadow = true;
 
 // Adjust the shadow camera's frustum
-directionallight.shadow.camera.left = -45; // Adjust as needed
-directionallight.shadow.camera.right = 45; // Adjust as needed
-directionallight.shadow.camera.top = 45; // Adjust as needed
-directionallight.shadow.camera.bottom = -45; // Adjust as needed
+directionallight.shadow.camera.left = -50; // Adjust as needed
+directionallight.shadow.camera.right = 50; // Adjust as needed
+directionallight.shadow.camera.top = 50; // Adjust as needed
+directionallight.shadow.camera.bottom = -50; // Adjust as needed
 directionallight.shadow.camera.near = 0.1; // Adjust as needed
 directionallight.shadow.camera.far = 50; // Adjust as needed
 directionallight.shadow.mapSize.width = 1024; // Adjust as needed
@@ -258,7 +325,7 @@ gui.add({name: 'Spotlight Rotation Z', value: spotlight.target.position.z}, 'val
         spotlight.target.position.z = value;
     });
 
-gui.add({name: 'Spotlight Intensity', value: spotlight.intensity}, 'value', 0, 1000)
+gui.add({name: 'Spotlight Intensity', value: spotlight.intensity}, 'value', 0, 500)
     .name('Spotlight Intensity')
     .onChange(function(value) {
         spotlight.intensity = value;
@@ -283,7 +350,6 @@ var customShader = {
 
         void main() {
             vec4 color = texture2D(tDiffuse, vUv);
-            // Modify the color using your custom shader logic
             gl_FragColor = color;
         }
     `
@@ -321,12 +387,10 @@ pitchObject.add(camera);
 // Add yawObject to the scene instead of the camera
 scene.add(yawObject);
 
-
 //Update the mouse position
-// document.addEventListener('click', function() {
-//     document.body.requestPointerLock();
-// }, false);
-
+document.addEventListener('click', function() {
+    document.body.requestPointerLock();
+}, false);
 
 // Update the camera rotation when the mouse moves
 document.addEventListener('mousemove', function(event) {
@@ -376,46 +440,98 @@ window.addEventListener('keydown', (event) =>{
 });
 
 let isDragging = false;
+let isPhysicsPaused = false;
 
-const dragcontrols = new DragControls(objects, camera, renderer.domElement);
-const transformcontrols = new TransformControls(camera, renderer.domElement);
+let plane = new THREE.Plane();
+let raycaster = new THREE.Raycaster();
+let offset = new THREE.Vector3();
+let intersection = new THREE.Vector3();
+let mouse = new THREE.Vector2();
 
-scene.add(transformcontrols);
-
-dragcontrols.addEventListener('dragstart', function (event) {
-    event.object.material.emissive.set(0xffffff);
-    greenrockBody.type = CANNON.Body.KINEMATIC;
-    isDragging = true;
-});
-
-dragcontrols.addEventListener('drag', function (event) {
-    // When you drag the object, update the position of the physics body to match the position of the object
-    greenrockBody.position.copy(greenrock.position);
-});
-
-dragcontrols.addEventListener('dragend', function (event) {
-    event.object.material.emissive.set(0x000000);
-    greenrockBody.type = CANNON.Body.DYNAMIC;
-    isDragging = false;
-});
-
-dragcontrols.addEventListener('hoveron', function (event) {
-    console.log("üstündeyim");
-})
-
-// Listen for mousedown events
-renderer.domElement.addEventListener('mousedown', function (event) {
-    if (isDragging) {
-        transformcontrols.attach(dragcontrols.object);
-        transformcontrols.setMode('rotate');
+renderer.domElement.addEventListener('mousedown', function(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    if (raycaster.ray.intersectBox(new THREE.Box3().setFromObject(greenrock), intersection)) {
+        isDragging = true;
+        isPhysicsPaused = true;
+        plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(plane.normal), intersection);
+        if (raycaster.ray.intersectPlane(plane, intersection)) {
+            offset.copy(intersection).sub(greenrock.position);
+        }
     }
 });
 
-// Listen for mouseup events
-renderer.domElement.addEventListener('mouseup', function (event) {
-    transformcontrols.detach();
+
+renderer.domElement.addEventListener('mousemove', function(event) {
+    if (!isDragging) return;
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    if (raycaster.ray.intersectPlane(plane, intersection)) {
+        greenrock.position.copy(intersection.sub(offset));
+        greenrockBody.position.copy(greenrock.position);
+        if(bin && greenrock){
+            let binBox = new THREE.Box3().setFromObject(bin);
+            let intersects = raycaster.intersectObject(bin);
+
+
+            
+            if (intersects.length > 0 && binBox.containsPoint(intersects[0].point)) {
+                // The greenrock is colliding with the bin
+                scene.remove(greenrock); // Remove the greenrock mesh from the scene
+                world.remove(greenrockBody); // Remove the greenrock body from the physics world
+            }
+        }   
+    }
 });
 
+
+renderer.domElement.addEventListener('mouseup', function(event) {
+    isDragging = false;
+    isPhysicsPaused = false;
+    greenrockBody.type = CANNON.Body.DYNAMIC; // Set the body back to dynamic when the drag ends
+
+    greenrockBody.addEventListener("beginContact", function (event) {
+        console.log("contact");
+        if (event.body === binBody) { // If the other body is the bin body
+            scene.remove(greenrock); // Remove the greenrock mesh from the scene
+            world.remove(greenrockBody); // Remove the greenrock body from the physics world
+            
+        }
+    });
+
+});
+
+// const dragcontrols = new DragControls(objects, camera, renderer.domElement);
+// //const transformcontrols = new TransformControls(camera, renderer.domElement);
+
+// //scene.add(transformcontrols);
+
+// let originalPosition = new THREE.Vector3();
+
+// dragcontrols.addEventListener('dragstart', function (event) {
+//     event.object.material.emissive.set(0xffffff);
+//     originalPosition.copy(event.object.position);
+//     greenrockBody.type = CANNON.Body.STATIC;
+//     isDragging = true;
+// });
+
+// const scaleFactor = 0.1; // Adjust this value to match the scales of your Three.js scene and Cannon.js world
+
+// dragcontrols.addEventListener('drag', function (event) {
+//     let displacement = event.object.position.clone().sub(originalPosition);
+//     greenrockBody.position.copy(originalPosition).add(displacement);
+// });
+// dragcontrols.addEventListener('dragend', function (event) {
+//     event.object.material.emissive.set(0x000000);
+//     isDragging = false;
+//     greenrockBody.type = CANNON.Body.DYNAMIC;
+// });
+
+// dragcontrols.addEventListener('hoveron', function (event) {
+
+// });
 
 // 60 fps lock 
 let then = performance.now();
@@ -434,13 +550,39 @@ function render(now){
 
     const tick = () =>{
         stats.begin();
-        world.step(1 / 60);
+        if (!isPhysicsPaused) {
+            world.step(1 / 60);
+        } 
 
-        if (greenrock && greenrockBody) {
+        if (greenrock && greenrockBody && bin) {
+            
+            let distanceX = Math.abs(greenrockBody.position.x - binBody.position.x);
+            let distanceY = Math.abs(greenrockBody.position.y - binBody.position.y);
+            let distanceZ = Math.abs(greenrockBody.position.z - binBody.position.z);
+        
+            let sumHalfExtentsX = greenrockBody.shapes[0].halfExtents.x + binBody.shapes[0].halfExtents.x;
+            let sumHalfExtentsY = greenrockBody.shapes[0].halfExtents.y + binBody.shapes[0].halfExtents.y;
+            let sumHalfExtentsZ = greenrockBody.shapes[0].halfExtents.z + binBody.shapes[0].halfExtents.z;
+        
+            if (distanceX < sumHalfExtentsX && distanceY < sumHalfExtentsY && distanceZ < sumHalfExtentsZ) {
+                // The greenrockBody is colliding with the binBody
+                scene.remove(greenrock); // Remove the greenrock mesh from the scene
+                world.remove(greenrockBody); // Remove the greenrock body from the physics world
+               
+            }
             greenrock.position.copy(greenrockBody.position);
             greenrock.quaternion.copy(greenrockBody.quaternion);
-        }
 
+            // bounding box for greenrock for debugging
+            // boxMesh.position.copy(greenrockBody.position);
+            // boxMesh.quaternion.copy(greenrockBody.quaternion);
+        
+        }
+        if (recycleBinMesh && binBody) {
+            recycleBinMesh.position.copy(binBody.position);
+            recycleBinMesh.quaternion.copy(binBody.quaternion);
+            
+        }
         composer.render();
         stats.end();
     }
