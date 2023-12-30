@@ -1,14 +1,14 @@
 
 import * as THREE from 'three'
-import {GUI} from "dat.gui";
-import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
-import Stats from "three/addons/libs/stats.module.js";
+import * as CANNON from 'cannon';
+import { GUI } from "dat.gui";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { DragControls } from 'three/addons/controls/DragControls.js';
-import {TransformControls} from "three/examples/jsm/controls/TransformControls.js";
-import * as CANNON from 'cannon';
+import Stats from "three/addons/libs/stats.module.js";
+
+export default function tableScene(){
 
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
@@ -19,7 +19,7 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 60 , WIDTH / HEIGHT, 0.1, 1000);
 
 // renders in canvas
-const renderer = new THREE.WebGLRenderer({canvas: canvas});
+const renderer = new THREE.WebGLRenderer({canvas: canvas, powerPreference: "high-performance"});
 
 // antialias: -40 fps
 renderer.shadowMap.enabled = true;
@@ -116,13 +116,11 @@ loadModel('greenrock/scene.gltf').then((model) => {
     console.error('Error loading model:', error);
 });
 
-
 // bounding box for greenrock for debugging
 // const boxGeometry = new THREE.BoxGeometry(2, 2, 2); // The size should be twice the size of the Cannon.js Vec3
 // const boxMaterial = new THREE.MeshBasicMaterial({wireframe: true, color: 0xff0000});
 // const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
 // scene.add(boxMesh);
-
 
 var binBody, recycleBinMesh;
 
@@ -178,11 +176,11 @@ textureLoader.load('texttable.png', function(texture) {
 
 // left wall up
 textureLoader.load('walltext.png', function(texture) {
-    var geometry = new THREE.PlaneGeometry(70, 50); 
+    var geometry = new THREE.PlaneGeometry(50, 50); 
     var material = new THREE.MeshStandardMaterial({ map: texture });
                     
     var wall = new THREE.Mesh(geometry, material);
-    wall.position.set(-50, 10, 0); 
+    wall.position.set(-50, 10, 10); 
     wall.rotation.set(0, Math.PI/2, 0);
     scene.add(wall);
 });
@@ -191,12 +189,12 @@ textureLoader.load('walltext.png', function(texture) {
 // right wall
 textureLoader.load('walltext.png', function(texture) {
     // Create the geometry and material
-    var geometry = new THREE.PlaneGeometry(70, 50); // Adjust the size as needed
+    var geometry = new THREE.PlaneGeometry(50, 50); // Adjust the size as needed
     var material = new THREE.MeshStandardMaterial({ map: texture });
 
     // Create the mesh and add it to the scene
     var wall = new THREE.Mesh(geometry, material);
-    wall.position.set(50, 10, 0); // Adjust the position as needed
+    wall.position.set(50, 10, 10); // Adjust the position as needed
     wall.rotation.set(0, -Math.PI/2, 0);
     scene.add(wall);
 });
@@ -359,23 +357,19 @@ var customShader = {
 
 var customPass = new ShaderPass(customShader);
 
-// Create an EffectComposer
 var composer = new EffectComposer(renderer);
 
-// Add a RenderPass to render the scene
 composer.addPass(new RenderPass(scene, camera));
 
-// Add your custom ShaderPass
 composer.addPass(customPass);
 
-var speed = 0.0005; // Adjust this value to change the speed of rotation
+var speed = 0.0005;
 var pitchObject = new THREE.Object3D();
 var yawObject = new THREE.Object3D();
 
 camera.rotation.set(0, 0, 0);
 camera.position.set(0, 0, 0);
 
-// Adjust the camera's near and far values
 camera.near = 0.01;
 camera.far = 1000;
 camera.updateProjectionMatrix();
@@ -408,30 +402,23 @@ document.addEventListener('mousemove', function(event) {
     }
 }, false);
 
-
 // keyboard camera for debugging
 window.addEventListener('keydown', (event) =>{
     switch (event.code){
         case 'KeyA':
             camera.position.x -= 5;
-            //cube.position.x -= 5;
             break;
         case 'KeyD':
             camera.position.x += 5;
-            //cube.position.x += 5;
             break;
         case 'KeyW':
             camera.position.z -= 5;
-            //cube.position.y += 5;was
             break;
         case 'KeyS':
             camera.position.z += 5;
-            //cube.position.y -= 5;
             break;
         case 'KeyQ':
-            // mouse q ve e yi overrideliyor
             camera.position.y += 5;
-            //cube.position.z += 5;
             break;
         case 'KeyE':
             camera.position.y -= 5;
@@ -439,9 +426,9 @@ window.addEventListener('keydown', (event) =>{
     }
 });
 
+// algorithm for the collision detection
 let isDragging = false;
 let isPhysicsPaused = false;
-
 let plane = new THREE.Plane();
 let raycaster = new THREE.Raycaster();
 let offset = new THREE.Vector3();
@@ -462,9 +449,10 @@ renderer.domElement.addEventListener('mousedown', function(event) {
     }
 });
 
-
 renderer.domElement.addEventListener('mousemove', function(event) {
-    if (!isDragging) return;
+    if (!isDragging){
+     return;
+    }
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
@@ -475,8 +463,6 @@ renderer.domElement.addEventListener('mousemove', function(event) {
             let binBox = new THREE.Box3().setFromObject(bin);
             let intersects = raycaster.intersectObject(bin);
 
-
-            
             if (intersects.length > 0 && binBox.containsPoint(intersects[0].point)) {
                 // The greenrock is colliding with the bin
                 scene.remove(greenrock); // Remove the greenrock mesh from the scene
@@ -486,7 +472,7 @@ renderer.domElement.addEventListener('mousemove', function(event) {
     }
 });
 
-
+// collision for the greenrock and bin
 renderer.domElement.addEventListener('mouseup', function(event) {
     isDragging = false;
     isPhysicsPaused = false;
@@ -497,46 +483,48 @@ renderer.domElement.addEventListener('mouseup', function(event) {
         if (event.body === binBody) { // If the other body is the bin body
             scene.remove(greenrock); // Remove the greenrock mesh from the scene
             world.remove(greenrockBody); // Remove the greenrock body from the physics world
-            
         }
     });
 
 });
 
-// const dragcontrols = new DragControls(objects, camera, renderer.domElement);
-// //const transformcontrols = new TransformControls(camera, renderer.domElement);
-
-// //scene.add(transformcontrols);
-
-// let originalPosition = new THREE.Vector3();
-
-// dragcontrols.addEventListener('dragstart', function (event) {
-//     event.object.material.emissive.set(0xffffff);
-//     originalPosition.copy(event.object.position);
-//     greenrockBody.type = CANNON.Body.STATIC;
-//     isDragging = true;
-// });
-
-// const scaleFactor = 0.1; // Adjust this value to match the scales of your Three.js scene and Cannon.js world
-
-// dragcontrols.addEventListener('drag', function (event) {
-//     let displacement = event.object.position.clone().sub(originalPosition);
-//     greenrockBody.position.copy(originalPosition).add(displacement);
-// });
-// dragcontrols.addEventListener('dragend', function (event) {
-//     event.object.material.emissive.set(0x000000);
-//     isDragging = false;
-//     greenrockBody.type = CANNON.Body.DYNAMIC;
-// });
-
-// dragcontrols.addEventListener('hoveron', function (event) {
-
-// });
-
 // 60 fps lock 
 let then = performance.now();
 const fpsInterval = 1000 / 60;
 
+function update(){
+    // physics update
+    if (!isPhysicsPaused) {
+        world.step(1 / 60);
+    } 
+    if (greenrock && greenrockBody && bin) {
+        
+        // distance calculation for the colliison
+        let distanceX = Math.abs(greenrockBody.position.x - binBody.position.x);
+        let distanceY = Math.abs(greenrockBody.position.y - binBody.position.y);
+        let distanceZ = Math.abs(greenrockBody.position.z - binBody.position.z);
+    
+        let sumHalfExtentsX = greenrockBody.shapes[0].halfExtents.x + binBody.shapes[0].halfExtents.x;
+        let sumHalfExtentsY = greenrockBody.shapes[0].halfExtents.y + binBody.shapes[0].halfExtents.y;
+        let sumHalfExtentsZ = greenrockBody.shapes[0].halfExtents.z + binBody.shapes[0].halfExtents.z;
+    
+        if (distanceX < sumHalfExtentsX && distanceY < sumHalfExtentsY && distanceZ < sumHalfExtentsZ) {
+            // The greenrockBody is colliding with the binBody
+            scene.remove(greenrock); // Remove the greenrock mesh from the scene
+            world.remove(greenrockBody); // Remove the greenrock body from the physics worl
+        }
+        greenrock.position.copy(greenrockBody.position);
+        greenrock.quaternion.copy(greenrockBody.quaternion);
+        // bounding box for greenrock for debugging
+        // boxMesh.position.copy(greenrockBody.position);
+        // boxMesh.quaternion.copy(greenrockBody.quaternion);
+    }
+    if (recycleBinMesh && binBody) {
+        recycleBinMesh.position.copy(binBody.position);
+        recycleBinMesh.quaternion.copy(binBody.quaternion);
+    }
+
+}
 // render function
 function render(now){
     const elapsed = now - then;
@@ -548,46 +536,13 @@ function render(now){
 
     then = now - (elapsed % fpsInterval);
 
-    const tick = () =>{
-        stats.begin();
-        if (!isPhysicsPaused) {
-            world.step(1 / 60);
-        } 
+    stats.begin();
+    update();
+    composer.render();
+    stats.end();
 
-        if (greenrock && greenrockBody && bin) {
-            
-            let distanceX = Math.abs(greenrockBody.position.x - binBody.position.x);
-            let distanceY = Math.abs(greenrockBody.position.y - binBody.position.y);
-            let distanceZ = Math.abs(greenrockBody.position.z - binBody.position.z);
-        
-            let sumHalfExtentsX = greenrockBody.shapes[0].halfExtents.x + binBody.shapes[0].halfExtents.x;
-            let sumHalfExtentsY = greenrockBody.shapes[0].halfExtents.y + binBody.shapes[0].halfExtents.y;
-            let sumHalfExtentsZ = greenrockBody.shapes[0].halfExtents.z + binBody.shapes[0].halfExtents.z;
-        
-            if (distanceX < sumHalfExtentsX && distanceY < sumHalfExtentsY && distanceZ < sumHalfExtentsZ) {
-                // The greenrockBody is colliding with the binBody
-                scene.remove(greenrock); // Remove the greenrock mesh from the scene
-                world.remove(greenrockBody); // Remove the greenrock body from the physics world
-               
-            }
-            greenrock.position.copy(greenrockBody.position);
-            greenrock.quaternion.copy(greenrockBody.quaternion);
-
-            // bounding box for greenrock for debugging
-            // boxMesh.position.copy(greenrockBody.position);
-            // boxMesh.quaternion.copy(greenrockBody.quaternion);
-        
-        }
-        if (recycleBinMesh && binBody) {
-            recycleBinMesh.position.copy(binBody.position);
-            recycleBinMesh.quaternion.copy(binBody.quaternion);
-            
-        }
-        composer.render();
-        stats.end();
-    }
-    tick();
     requestAnimationFrame(render);
 }
-
-requestAnimationFrame(render);
+//requestAnimationFrame(render);
+    return {scene, camera, render, update};
+}

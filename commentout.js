@@ -211,3 +211,36 @@
 //     isPhysicsPaused = false;
 //     greenrockBody.type = CANNON.Body.DYNAMIC; // Set the body back to dynamic when the drag ends
 // });
+
+
+
+// DRAG CONTROLS ( NOT WORKING )
+// const dragcontrols = new DragControls(objects, camera, renderer.domElement);
+// //const transformcontrols = new TransformControls(camera, renderer.domElement);
+
+// //scene.add(transformcontrols);
+
+// let originalPosition = new THREE.Vector3();
+
+// dragcontrols.addEventListener('dragstart', function (event) {
+//     event.object.material.emissive.set(0xffffff);
+//     originalPosition.copy(event.object.position);
+//     greenrockBody.type = CANNON.Body.STATIC;
+//     isDragging = true;
+// });
+
+// const scaleFactor = 0.1; // Adjust this value to match the scales of your Three.js scene and Cannon.js world
+
+// dragcontrols.addEventListener('drag', function (event) {
+//     let displacement = event.object.position.clone().sub(originalPosition);
+//     greenrockBody.position.copy(originalPosition).add(displacement);
+// });
+// dragcontrols.addEventListener('dragend', function (event) {
+//     event.object.material.emissive.set(0x000000);
+//     isDragging = false;
+//     greenrockBody.type = CANNON.Body.DYNAMIC;
+// });
+
+// dragcontrols.addEventListener('hoveron', function (event) {
+
+// });
