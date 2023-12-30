@@ -28,20 +28,22 @@ Promise.all([earthloader, sunloader]).then(() => {
 });
 
 function switchScene(sceneName) {
-    if (sceneName === 'space' && !modelsLoaded) {
-        console.log('Models are not loaded yet');
-        return;
+    // Check if the scene exists
+    if (renderFunctions[sceneName] && updateFunctions[sceneName]) {
+        // Switch to the new scene
+        currentScene = sceneName;
+    } else {
+        console.error('Scene not found:', sceneName);
     }
-    currentScene = sceneName;
 }
 
 window.addEventListener('keydown', (event) => {
     if (event.key === '1') {
         switchScene('table');
-        spaceRender.dispose();
+
     } else if (event.key === '2') {
+        console.log("heheh");
         switchScene('space');
-        tableRender.dispose();
     }
 });
 

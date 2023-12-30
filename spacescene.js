@@ -105,27 +105,28 @@ export default function spaceScene(){
     const spacebackground = new THREE.Points( starsGeometry, starsMaterial );
     scene2.add(spacebackground);
     
-    // render function
-    function render() {
-        stats.begin();
-
-        // re renders constantly on every frame
-    
+    function update(){
         controls.update(); // mouse update
-    
+
         if(mixer){
             mixer.update(0.01);
         }
         if(earth){
             earth.rotation.y += 0.002;
         }
+    }
+
+    // render function
+    function render() {
+        stats.begin();
+
+        update();
            
         if (earthLoaded && sunLoaded) {
             renderer.render(scene2, camera);
         }
 
         stats.end();
-        requestAnimationFrame(render);
     }
     
     
@@ -167,6 +168,7 @@ export default function spaceScene(){
     
     //     stats.update();
     // }
-    return { scene2 , camera, earthLoaded, sunLoaded, render};
+
+    return { scene2 , camera, earthLoaded, sunLoaded, render, update};
 }
 

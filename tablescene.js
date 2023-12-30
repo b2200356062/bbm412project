@@ -26,8 +26,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 
 renderer.setSize( window.innerWidth, window.innerHeight );
-renderer.setClearColor(0x444444, 1); // arkaplan rengi
-
+renderer.setClearColor(0x000000, 1); // arkaplan rengi
 
 // objects
 var objects = [];
@@ -489,8 +488,6 @@ renderer.domElement.addEventListener('mouseup', function(event) {
 });
 
 // 60 fps lock 
-let then = performance.now();
-const fpsInterval = 1000 / 60;
 
 function update(){
     // physics update
@@ -525,12 +522,15 @@ function update(){
     }
 
 }
+
+let then = performance.now();
+const fpsInterval = 1000 / 60;
+
 // render function
 function render(now){
     const elapsed = now - then;
     
     if (elapsed < fpsInterval) {
-        requestAnimationFrame(render);
         return;
     }
 
@@ -540,8 +540,6 @@ function render(now){
     update();
     composer.render();
     stats.end();
-
-    requestAnimationFrame(render);
 }
 //requestAnimationFrame(render);
     return {scene, camera, render, update};
