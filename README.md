@@ -13,6 +13,8 @@ update 28.12.23 18.26 - cannon js kütüphanesi ile gravity ekledim. masanın co
 
 update 29.12.23 15.02 - collision shapelerini ayarladım. artık objeleri kutunun içine bıraktığında yok oluyor. fizikler ve gravity doğru calısıyor. objeyi tutup kaldırınca geri düşüyor.
 
+update 30.12.23 16.15 - sahne geçişi çalışyor ama fps çok kötü. 4 - 5 civarında ve browserı feci kastırıyor. three'nin renderırını verdiğimde iyi calısıyodu ama o zaman da fizik ve collision updatelenmdi. ve renkler beyazlamıştı.
+
 how to run:
 install node.js ( install exe from node.js' webpage)
 
