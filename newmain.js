@@ -46,7 +46,6 @@ window.addEventListener('keydown', (event) => {
         switchScene('table');
 
     } else if (event.key === '2') {
-        console.log("heheh");
         switchScene('space');
     }
 });
@@ -62,7 +61,7 @@ function render(now) {
         return;
     }
     then = now - (elapsed % fpsInterval);
-    
+
     if (updateFunctions[currentScene]) {
         updateFunctions[currentScene]();
     }
