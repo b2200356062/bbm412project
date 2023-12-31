@@ -7,7 +7,6 @@ import {GUI} from 'dat.gui'
 // 3d model loader
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader";
 // fps counter
-import Stats from "three/addons/libs/stats.module";
 
 //spaceScene();
 
@@ -75,11 +74,7 @@ export default function spaceScene(){
     
     // mouse controls
     const controls = new OrbitControls(camera, renderer.domElement);
-    
-    // fps counter
-    const stats = new Stats();
-    stats.showPanel(0);
-    document.body.appendChild(stats.dom);
+
     
     // star background
     const stars = new Array(0);
@@ -118,7 +113,6 @@ export default function spaceScene(){
 
     // render function
     function render() {
-        stats.begin();
 
         update();
            
@@ -126,7 +120,6 @@ export default function spaceScene(){
             renderer.render(scene2, camera);
         }
 
-        stats.end();
     }
     
     

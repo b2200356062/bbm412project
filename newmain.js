@@ -1,5 +1,10 @@
 import spaceScene  from './spacescene.js';
 import tableScene from './tablescene.js';
+import Stats from "three/addons/libs/stats.module.js";
+
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
 
 let { render: tableRender, update: tableUpdate } = tableScene();
 let { render: spaceRender, earthLoaded: earthloader, sunLoaded: sunloader } = spaceScene();
@@ -20,7 +25,6 @@ let updateFunctions = {
 };
 
 Promise.all([earthloader, sunloader]).then(() => {
-    // Start rendering
     render();
     modelsLoaded = true;
 }).catch((error) => {
@@ -48,7 +52,8 @@ window.addEventListener('keydown', (event) => {
 });
 
 let then = 0;
-let fpsInterval = 1000 / 144; // for 60 fps
+let fpsInterval = 1000 / 60; // for 60 fps
+
 function render(now) {
     const elapsed = now - then;
     
@@ -57,8 +62,7 @@ function render(now) {
         return;
     }
     then = now - (elapsed % fpsInterval);
-
-    // Only call the update and render functions of the current scene
+    
     if (updateFunctions[currentScene]) {
         updateFunctions[currentScene]();
     }
@@ -66,5 +70,6 @@ function render(now) {
         renderFunctions[currentScene]();
     }
 
+    stats.update();
     requestAnimationFrame(render);
 }

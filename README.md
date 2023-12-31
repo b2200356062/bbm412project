@@ -15,6 +15,8 @@ update 29.12.23 15.02 - collision shapelerini ayarladım. artık objeleri kutunu
 
 update 30.12.23 16.31 - sahne geçişi çalışyor.
 
+update 31.12.23 10:53 - puan için basit bi text ekledim. obje atılınca puan artıyor. ve obje atıldığı zaman ses efekti var.
+
 how to run:
 install node.js ( install exe from node.js' webpage)
 

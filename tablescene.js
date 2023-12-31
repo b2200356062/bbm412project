@@ -6,7 +6,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import Stats from "three/addons/libs/stats.module.js";
+
 
 export default function tableScene(){
 
@@ -109,8 +109,8 @@ loadModel('greenrock/scene.gltf').then((model) => {
     greenrockBody.addShape(greenrockShape);
     greenrockBody.position.copy(greenrock.position);
     world.addBody(greenrockBody);
+    greenrockBody.collisionResponse = true;
 
-    // You can use greenrock and greenrockBody here
 }).catch((error) => {
     console.error('Error loading model:', error);
 });
@@ -146,6 +146,7 @@ loader.load('cop/scene.gltf', function (gltf) {
     binBody.position.copy(bin.position);
     world.addBody(binBody);
 
+    binBody.collisionResponse = true;
 
     // // Create a box geometry for the recycle bin
     // const recycleBinGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
@@ -279,9 +280,7 @@ const directionallighthelper = new THREE.DirectionalLightHelper( directionalligh
 scene.add(directionallight);
 
 // GUI FOR LIGHTS AND STATS
-const stats = new Stats();
-stats.showPanel(0);
-document.body.appendChild(stats.dom);
+
 
 const gui = new GUI();
 gui.width = 320;
@@ -457,19 +456,30 @@ renderer.domElement.addEventListener('mousemove', function(event) {
     raycaster.setFromCamera(mouse, camera);
     if (raycaster.ray.intersectPlane(plane, intersection)) {
         greenrock.position.copy(intersection.sub(offset));
-        greenrockBody.position.copy(greenrock.position);
-        if(bin && greenrock){
-            let binBox = new THREE.Box3().setFromObject(bin);
-            let intersects = raycaster.intersectObject(bin);
-
-            if (intersects.length > 0 && binBox.containsPoint(intersects[0].point)) {
-                // The greenrock is colliding with the bin
-                scene.remove(greenrock); // Remove the greenrock mesh from the scene
-                world.remove(greenrockBody); // Remove the greenrock body from the physics world
-            }
-        }   
+        greenrockBody.position.copy(greenrock.position); 
     }
 });
+
+let score = 0;
+
+function objectRecycled() {
+    score++;
+    document.getElementById('points').textContent = 'Points: ' + score;
+    
+    // sound effect
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    const sound = new THREE.Audio(listener);
+
+    // load a sound and set it as the Audio object's buffer
+    const audioLoader = new THREE.AudioLoader();
+    audioLoader.load('sounds/yahoo.mp3', function(buffer) {
+        sound.setBuffer(buffer);
+        sound.setVolume(0.7);
+        sound.play();
+    });
+}
 
 // collision for the greenrock and bin
 renderer.domElement.addEventListener('mouseup', function(event) {
@@ -477,15 +487,17 @@ renderer.domElement.addEventListener('mouseup', function(event) {
     isPhysicsPaused = false;
     greenrockBody.type = CANNON.Body.DYNAMIC; // Set the body back to dynamic when the drag ends
 
-    greenrockBody.addEventListener("beginContact", function (event) {
-        console.log("contact");
-        if (event.body === binBody) { // If the other body is the bin body
-            scene.remove(greenrock); // Remove the greenrock mesh from the scene
-            world.remove(greenrockBody); // Remove the greenrock body from the physics world
-        }
-    });
+    // greenrockBody.addEventListener("beginContact", function (event) {
+    //     console.log("yuh");
+    //     if (event.body === binBody) { // If the other body is the bin body
+    //         objectRecycled();
+    //         scene.remove(greenrock); // Remove the greenrock mesh from the scene
+    //         world.remove(greenrockBody); // Remove the greenrock body from the physics world
+    //     }
+    // });
 
 });
+let isInBin = false;
 
 // 60 fps lock 
 
@@ -506,9 +518,13 @@ function update(){
         let sumHalfExtentsZ = greenrockBody.shapes[0].halfExtents.z + binBody.shapes[0].halfExtents.z;
     
         if (distanceX < sumHalfExtentsX && distanceY < sumHalfExtentsY && distanceZ < sumHalfExtentsZ) {
-            // The greenrockBody is colliding with the binBody
-            scene.remove(greenrock); // Remove the greenrock mesh from the scene
-            world.remove(greenrockBody); // Remove the greenrock body from the physics worl
+            if (!isInBin) {
+                // The greenrockBody is colliding with the binBody
+                scene.remove(greenrock); // Remove the greenrock mesh from the scene
+                world.remove(greenrockBody); // Remove the greenrock body from the physics world
+                objectRecycled();
+                isInBin = true;
+            }
         }
         greenrock.position.copy(greenrockBody.position);
         greenrock.quaternion.copy(greenrockBody.quaternion);
@@ -522,25 +538,17 @@ function update(){
     }
 
 }
-
-let then = performance.now();
-const fpsInterval = 1000 / 60;
-
 // render function
-function render(now){
-    const elapsed = now - then;
-    
-    if (elapsed < fpsInterval) {
-        return;
-    }
-
-    then = now - (elapsed % fpsInterval);
-
-    stats.begin();
+function render(){
     update();
     composer.render();
-    stats.end();
 }
+
+
+
+
 //requestAnimationFrame(render);
     return {scene, camera, render, update};
 }
+
+
