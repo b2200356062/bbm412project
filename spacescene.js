@@ -35,7 +35,7 @@ export default function spaceScene(){
 
     let earth;
 
-    let earthLoaded = new Promise((resolve, reject) => {
+    let earthloader = new Promise((resolve, reject) => {
         loader.load('earth2/scene.gltf', function (gltf) {
             earth = gltf.scene;
             earth.scale.set(0.1, 0.1, 0.1);
@@ -50,7 +50,7 @@ export default function spaceScene(){
 
     let sun;
     
-    let sunLoaded = new Promise((resolve, reject) => {
+    let sunloader= new Promise((resolve, reject) => {
         loader.load('sun/scene.gltf', function (gltf) {
             sun = gltf.scene;
             sun.position.set(1000, 0, 0);
@@ -113,13 +113,10 @@ export default function spaceScene(){
 
     // render function
     function render() {
-
         update();
-           
-        if (earthLoaded && sunLoaded) {
+        if (earthloader && sunloader) {
             renderer.render(scene2, camera);
         }
-
     }
     
     
@@ -162,6 +159,6 @@ export default function spaceScene(){
     //     stats.update();
     // }
 
-    return { scene2 , camera, earthLoaded, sunLoaded, render, update};
+    return { scene2 , camera, earthloader, sunloader, render, update};
 }
 

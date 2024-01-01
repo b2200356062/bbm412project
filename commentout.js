@@ -244,3 +244,97 @@
 // dragcontrols.addEventListener('hoveron', function (event) {
 
 // });
+
+
+// NEW MAIN JS
+// import spaceScene  from './spacescene.js';
+// import tableScene from './tablescene.js';
+// import Stats from "three/addons/libs/stats.module.js";
+// import * as THREE from 'three';
+
+// const stats = new Stats();
+// stats.showPanel(0);
+// document.body.appendChild(stats.dom);
+
+// let renderer = new THREE.WebGLRenderer();
+
+// let { render: tableRender, update: tableUpdate, camera: tableCamera } = tableScene();
+// let { render: spaceRender, earthLoaded: earthloader, sunLoaded: sunloader, camera: spaceCamera } = spaceScene();
+
+// let currentScene = 'table';
+// let modelsLoaded = false;
+
+// let renderFunctions = {
+//     'table': tableRender,
+//     'space': spaceRender
+// };
+
+// let updateFunctions = {
+//     'table': tableUpdate,
+//     'space': function() {
+//         // update logic for space scene
+//     }
+// };
+
+// Promise.all([earthloader, sunloader]).then(() => {
+//     render();
+//     modelsLoaded = true;
+// }).catch((error) => {
+//     console.error('An error occurred while loading the models:', error);
+// });
+
+// function switchScene(sceneName) {
+//     // Check if the scene exists
+//     if (renderFunctions[sceneName] && updateFunctions[sceneName]) {
+//         // Switch to the new scene
+//         currentScene = sceneName;
+//     } else {
+//         console.error('Scene not found:', sceneName);
+//     }
+// }
+
+// window.addEventListener('keydown', (event) => {
+//     if (event.key === '1') {
+//         switchScene('table');
+
+//     } else if (event.key === '2') {
+//         switchScene('space');
+//     }
+// });
+
+// let then = 0;
+// let fpsInterval = 1000 / 60; // for 60 fps
+
+// window.addEventListener('resize', function () {
+//     // Update the camera's aspect ratio and projection matrix
+//     if (currentScene === 'table') {
+//         tableCamera.aspect = window.innerWidth / window.innerHeight;
+//         tableCamera.updateProjectionMatrix();
+//     } else if (currentScene === 'space') {
+//         spaceCamera.aspect = window.innerWidth / window.innerHeight;
+//         spaceCamera.updateProjectionMatrix();
+//     }
+
+//     // Update the renderer's size
+//     renderFunctions[currentScene].setSize(window.innerWidth, window.innerHeight);
+// });
+
+// function render(now) {
+//     const elapsed = now - then;
+    
+//     if (elapsed < fpsInterval) {
+//         requestAnimationFrame(render);
+//         return;
+//     }
+//     then = now - (elapsed % fpsInterval);
+
+//     if (updateFunctions[currentScene]) {
+//         updateFunctions[currentScene]();
+//     }
+//     if (renderFunctions[currentScene]) {
+//         renderFunctions[currentScene]();
+//     }
+    
+//     stats.update();
+//     requestAnimationFrame(render);
+// }

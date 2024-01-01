@@ -544,11 +544,8 @@ function render(){
     composer.render();
 }
 
-
-
-
 //requestAnimationFrame(render);
-    return {scene, camera, render, update};
+    return {scene, camera, render, update, gui};
 }
 
 
