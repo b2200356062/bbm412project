@@ -21,7 +21,7 @@ let scenes = {
 
 
 Promise.all([earthloader, sunloader]).then(() => {
-    render();
+    requestAnimationFrame(render);
     modelsLoaded = true;
 }).catch((error) => {
     console.error('An error occurred while loading the models:', error);
@@ -50,7 +50,7 @@ window.addEventListener('keydown', (event) => {
 
 // resize function
 window.addEventListener('resize', function () {
-    console.log("eheh");
+
     // Update the camera's aspect ratio and projection matrix
     scenes[currentScene].camera.aspect = window.innerWidth / window.innerHeight;
     scenes[currentScene].camera.updateProjectionMatrix();
@@ -60,18 +60,9 @@ window.addEventListener('resize', function () {
 });
 
 
-let then = 0;
-let fpsInterval = 1000 / 60; // for 60 fps
 
 // In the 
-function render(now) {
-    const elapsed = now - then;
-    
-    if (elapsed < fpsInterval) {
-        requestAnimationFrame(render);
-        return;
-    }
-    then = now - (elapsed % fpsInterval);
+function render() {
 
     scenes[currentScene].update();
     scenes[currentScene].render();

@@ -338,3 +338,219 @@
 //     stats.update();
 //     requestAnimationFrame(render);
 // }
+
+// algorithm for the collision detection
+// let isDragging = false;
+// let isPhysicsPaused = false;
+// let plane = new THREE.Plane();
+// let raycaster = new THREE.Raycaster();
+// let offset = new THREE.Vector3();
+// let intersection = new THREE.Vector3();
+// let mouse = new THREE.Vector2();
+
+// renderer.domElement.addEventListener('mousedown', function(event) {
+//     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+//     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+//     raycaster.setFromCamera(mouse, camera);
+//     if (raycaster.ray.intersectBox(new THREE.Box3().setFromObject(greenrock), intersection)) {
+//         isDragging = true;
+//         isPhysicsPaused = true;
+//         plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(plane.normal), intersection);
+//         if (raycaster.ray.intersectPlane(plane, intersection)) {
+//             offset.copy(intersection).sub(greenrock.position);
+//         }
+//     }
+// });
+
+// renderer.domElement.addEventListener('mousemove', function(event) {
+//     if (!isDragging){
+//      return;
+//     }
+//     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+//     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+//     raycaster.setFromCamera(mouse, camera);
+//     if (raycaster.ray.intersectPlane(plane, intersection)) {
+//         greenrock.position.copy(intersection.sub(offset));
+//         greenrockBody.position.copy(greenrock.position); 
+//     }
+// });
+
+// GUI FOR SPOTLIGHT
+// gui.add({name: 'Spotlight X', value: spotlight.position.x}, 'value', -100, 100)
+//     .name('Spotlight X')
+//     .onChange(function(value) {
+//         spotlight.position.x = value;
+//     });
+
+// gui.add({name: 'Spotlight Y', value: spotlight.position.y}, 'value', -100, 100)
+//     .name('Spotlight Y')
+//     .onChange(function(value) {
+//         spotlight.position.y = value;
+//     });
+
+// gui.add({name: 'Spotlight Z', value: spotlight.position.z}, 'value', -100, 100)
+//     .name('Spotlight Z')
+//     .onChange(function(value) {
+//         spotlight.position.z = value;
+//     });
+
+//     gui.add({name: 'Spotlight Rotate X', value: spotlightObject.rotation.x}, 'value', 0,2 * Math.PI)
+//     .name('Spotlight X')
+//     .onChange(function(value) {
+//         spotlightObject.rotation.x= value;
+//     });
+
+// gui.add({name: 'Spotlight Rotate Y', value: spotlightObject.rotation.y}, 'value', 0, 2 *Math.PI)
+//     .name('Spotlight Y')
+//     .onChange(function(value) {
+//         spotlightObject.rotation.y = value;
+//     });
+
+// gui.add({name: 'Spotlight Rotate Z', value: spotlightObject.rotation.z}, 'value', 0, 2 * Math.PI)
+//     .name('Spotlight Z')
+//     .onChange(function(value) {
+//         spotlightObject.rotation.z = value;
+//     });
+
+
+// shader for camera
+// var customShader = {
+//     uniforms: {
+//         "tDiffuse": { value: null },
+//     },
+//     vertexShader: //         varying vec2 vUv;
+
+//         void main() {
+//             vUv = uv;
+//             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+//         }
+//     `,
+//     fragmentShader: `
+//         uniform sampler2D tDiffuse;
+////         varying vec2 vUv;
+
+//         void main() {
+//             vec4 color = texture2D(tDiffuse, vUv);
+//             gl_FragColor = color;
+//         }
+//     `
+// };
+
+// // CAMERA VARIABLES
+
+// var customPass = new ShaderPass(customShader);
+
+// var composer = new EffectComposer(renderer);
+
+// composer.addPass(new RenderPass(scene, camera));
+
+// composer.addPass(customPass);
+
+// var speed = 0.0005;
+// var pitchObject = new THREE.Object3D();
+// var yawObject = new THREE.Object3D();
+
+// camera.rotation.set(0, 0, 0);
+// camera.position.set(0, 0, 0);
+
+// camera.near = 0.01;
+// camera.far = 1000;
+// camera.updateProjectionMatrix();
+
+// yawObject.position.set(0, 3, 25); // Set the initial position of yawObject
+// yawObject.add(pitchObject);
+// pitchObject.add(camera);
+
+// // Add yawObject to the scene instead of the camera
+// scene.add(yawObject);
+
+//Update the mouse position
+// document.addEventListener('click', function() {
+//     document.body.requestPointerLock();
+// }, false);
+
+// // Update the camera rotation when the mouse moves
+// document.addEventListener('mousemove', function(event) {
+//     if (document.pointerLockElement === document.body) {
+//         var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+//         var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+
+//         var newYaw = yawObject.rotation.y - movementX * speed;
+//         var newPitch = pitchObject.rotation.x - movementY * speed;
+
+//         // Constrain the yaw and pitch
+//         var maxAngle = Math.PI / 6; // 30 degrees
+//         yawObject.rotation.y = Math.max(-maxAngle, Math.min(maxAngle, newYaw));
+//         pitchObject.rotation.x = Math.max(-maxAngle, Math.min(maxAngle, newPitch));
+//     }
+// }, false);
+
+
+// // algorithm for the collision detection and dragging object
+// let isDragging = false;
+// let isPhysicsPaused = false;
+// let plane = new THREE.Plane();
+// let raycaster = new THREE.Raycaster();
+// let offset = new THREE.Vector3();
+// let intersection = new THREE.Vector3();
+// let mouse = new THREE.Vector2();
+// let isInspecting = false;
+// let originalPosition = new THREE.Vector3();
+
+// renderer.domElement.addEventListener('mousedown', function(event) {
+//     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+//     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+//     raycaster.setFromCamera(mouse, camera);
+//     if (event.shiftKey && raycaster.ray.intersectBox(new THREE.Box3().setFromObject(greenrock), intersection)) {
+//         // Enter inspection mode
+//         isInspecting = true;
+//         isRotating = true;
+//         originalPosition.copy(greenrock.position);
+//         greenrock.position.copy(camera.position);
+//         plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(plane.normal), intersection);
+//         if (raycaster.ray.intersectPlane(plane, intersection)) {
+//             offset.copy(intersection).sub(greenrock.position);
+//         }
+//     }
+// });
+
+// renderer.domElement.addEventListener('mousemove', function(event) {
+//     if (!isDragging && !isInspecting){
+//         return;
+//     }
+//     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+//     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+//     raycaster.setFromCamera(mouse, camera);
+//     if (raycaster.ray.intersectPlane(plane, intersection)) {
+//         greenrock.position.copy(intersection.sub(offset));
+//         greenrockBody.position.copy(greenrock.position); 
+//     }
+//     if (isRotating) {
+//         // Rotate the object with the mouse
+//         greenrock.rotation.y += (event.movementX / window.innerWidth) * 2;
+//         greenrock.rotation.x += (event.movementY / window.innerHeight) * 2;
+//     }
+// });
+
+// // collision for the greenrock and bin
+// renderer.domElement.addEventListener('mouseup', function(event) {
+//     if (isInspecting) {
+//         // Exit inspection mode
+//         isInspecting = false;
+//         isRotating = false;
+//         greenrock.position.copy(originalPosition);
+//     }
+//     isDragging = false;
+//     isPhysicsPaused = false;
+//     greenrockBody.type = CANNON.Body.DYNAMIC; // Set the body back to dynamic when the drag ends
+
+//     // greenrockBody.addEventListener("beginContact", function (event) {
+//     //     console.log("yuh");
+//     //     if (event.body === binBody) { // If the other body is the bin body
+//     //         objectRecycled();
+//     //         scene.remove(greenrock); // Remove the greenrock mesh from the scene
+//     //         world.remove(greenrockBody); // Remove the greenrock body from the physics world
+//     //     }
+//     // });
+
+// });

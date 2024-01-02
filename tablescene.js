@@ -6,7 +6,9 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { BrightnessContrastShader } from 'three/examples/jsm/shaders/BrightnessContrastShader.js';
+import {BokehPass} from 'three/examples/jsm/postprocessing/BokehPass.js';
 
 export default function tableScene(){
 
@@ -16,8 +18,9 @@ const HEIGHT = window.innerHeight;
 // canvas 
 const canvas = document.querySelector('#canvas');
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 60 , WIDTH / HEIGHT, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera( 60 , WIDTH / HEIGHT, 0.1, 100);
 
+camera.position.set(0, 5, 30);
 // renders in canvas
 const renderer = new THREE.WebGLRenderer({canvas: canvas, powerPreference: "high-performance"});
 
@@ -237,14 +240,16 @@ textureLoader.load('ceilingtext.png', function(texture) {
     scene.add(ceiling);
 });
 
+// parameter for spotlight switch on/off
+var parameters = {
+    'Spotlight Switch': true
+};
+
+// spotlight
 const spotlight = new THREE.SpotLight(0xffff00, 250, 20, Math.PI / 4, 0.25, 1);
-// Position the spotlight above the table
 spotlight.position.set(0, 10, 10);
-//spotlight.castShadow = true;
-// Point the spotlight at the table
 spotlight.target.position.set(0, 0, 10);
 scene.add(spotlight);
-
 const spotlighthelper = new THREE.SpotLightHelper( spotlight );
 //scene.add( spotlighthelper );
 
@@ -258,9 +263,8 @@ rectlight.position.set(0, 15, 10);
 rectlight.lookAt(0, 0, 10);
 scene.add(rectlight);
 
-
 // directional light
-const directionallight = new THREE.DirectionalLight(0xffffff, 5);
+const directionallight = new THREE.DirectionalLight(0xffffff, 3);
 directionallight.position.set(0, 24, 0);
 directionallight.castShadow = true;
 
@@ -280,6 +284,15 @@ const directionallighthelper = new THREE.DirectionalLightHelper( directionalligh
 scene.add(directionallight);
 
 // GUI FOR LIGHTS AND STATS
+
+// const controls = new OrbitControls(camera, renderer.domElement);
+// controls.update();
+// controls.enableDamping = true;
+// controls.dampingFactor = 0.02;
+// controls.enablePan = false;
+// if(greenrock){
+//     controls.target = greenrock.position;
+// }
 
 
 const gui = new GUI();
@@ -303,103 +316,39 @@ gui.add({name: 'Spotlight Z', value: spotlight.position.z}, 'value', -100, 100)
         spotlight.position.z = value;
     });
 
-    gui.add({name: 'Spotlight Rotation X', value: spotlight.target.position.x}, 'value', -90, 100)
-    .name('Spotlight Rotation X')
-    .onChange(function(value) {
-        spotlight.target.position.x = value;
-    });
+//     gui.add({name: 'Spotlight Rotation X', value: spotlight.angle}, 'value', -90, 100)
+//     .name('Spotlight Rotation X')
+//     .onChange(function(value) {
+//         spotlight.target.position.x = value;
+//     });
 
-gui.add({name: 'Spotlight Rotation Y', value: spotlight.target.position.y}, 'value', -Math.PI, Math.PI)
-    .name('Spotlight Rotation Y')
-    .onChange(function(value) {
-        spotlight.target.position.y = value;
-    });
+// gui.add({name: 'Spotlight Rotation Y', value: spotlight.target.position.y}, 'value', -Math.PI, Math.PI)
+//     .name('Spotlight Rotation Y')
+//     .onChange(function(value) {
+//         spotlight.target.position.y = value;
+//     });
 
-gui.add({name: 'Spotlight Rotation Z', value: spotlight.target.position.z}, 'value', -20, 20)
-    .name('Spotlight Rotation Z')
-    .onChange(function(value) {
-        spotlight.target.position.z = value;
-    });
+// gui.add({name: 'Spotlight Rotation Z', value: spotlight.target.position.z}, 'value', -20, 20)
+//     .name('Spotlight Rotation Z')
+//     .onChange(function(value) {
+//         spotlight.target.position.z = value;
+//     });
 
 gui.add({name: 'Spotlight Intensity', value: spotlight.intensity}, 'value', 0, 500)
     .name('Spotlight Intensity')
     .onChange(function(value) {
         spotlight.intensity = value;
     });
+    
+gui.add(parameters, 'Spotlight Switch')
+    .name('Spotlight On/Off')
+    .onChange(function(value) {
+        spotlight.visible = value;
+    });
 
-// shader for camera
-var customShader = {
-    uniforms: {
-        "tDiffuse": { value: null },
-    },
-    vertexShader: `
-        varying vec2 vUv;
 
-        void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `,
-    fragmentShader: `
-        uniform sampler2D tDiffuse;
-        varying vec2 vUv;
-
-        void main() {
-            vec4 color = texture2D(tDiffuse, vUv);
-            gl_FragColor = color;
-        }
-    `
-};
-
-// CAMERA VARIABLES
-
-var customPass = new ShaderPass(customShader);
-
-var composer = new EffectComposer(renderer);
-
-composer.addPass(new RenderPass(scene, camera));
-
-composer.addPass(customPass);
-
-var speed = 0.0005;
-var pitchObject = new THREE.Object3D();
-var yawObject = new THREE.Object3D();
-
-camera.rotation.set(0, 0, 0);
-camera.position.set(0, 0, 0);
-
-camera.near = 0.01;
-camera.far = 1000;
-camera.updateProjectionMatrix();
-
-yawObject.position.set(0, 3, 25); // Set the initial position of yawObject
-yawObject.add(pitchObject);
-pitchObject.add(camera);
-
-// Add yawObject to the scene instead of the camera
-scene.add(yawObject);
-
-//Update the mouse position
-document.addEventListener('click', function() {
-    document.body.requestPointerLock();
-}, false);
-
-// Update the camera rotation when the mouse moves
-document.addEventListener('mousemove', function(event) {
-    if (document.pointerLockElement === document.body) {
-        var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-        var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
-        var newYaw = yawObject.rotation.y - movementX * speed;
-        var newPitch = pitchObject.rotation.x - movementY * speed;
-
-        // Constrain the yaw and pitch
-        var maxAngle = Math.PI / 6; // 30 degrees
-        yawObject.rotation.y = Math.max(-maxAngle, Math.min(maxAngle, newYaw));
-        pitchObject.rotation.x = Math.max(-maxAngle, Math.min(maxAngle, newPitch));
-    }
-}, false);
-
+let lookAtVector = new THREE.Vector3(0, 0, -1);
+camera.lookAt(lookAtVector);    
 // keyboard camera for debugging
 window.addEventListener('keydown', (event) =>{
     switch (event.code){
@@ -421,10 +370,45 @@ window.addEventListener('keydown', (event) =>{
         case 'KeyE':
             camera.position.y -= 5;
             break;
+        case 'ArrowUp':
+            // Tilt the camera up
+            if(lookAtVector.y > 25){
+                break;
+            }
+            lookAtVector.y += 1;
+            event.preventDefault();
+            break;
+        case 'ArrowDown':
+            // Tilt the camera down
+            if(lookAtVector.y < -25){
+                break;
+            }
+            lookAtVector.y -= 1;
+            event.preventDefault();
+            break;
+        case 'ArrowLeft':
+            // Rotate the camera to the left
+            if(lookAtVector.x < -25){
+                break;
+            }
+            
+            lookAtVector.x -= 1;
+            event.preventDefault();
+            break;
+        case 'ArrowRight':
+            // Rotate the camera to the right
+            if(lookAtVector.x > 25){
+                break;
+            }
+            lookAtVector.x += 1;
+            event.preventDefault();
+            break;
     }
+    console.log(lookAtVector.x);
+    camera.lookAt(lookAtVector);
 });
 
-// algorithm for the collision detection
+// algorithm for the collision detection, drag and rotation controls for the object
 let isDragging = false;
 let isPhysicsPaused = false;
 let plane = new THREE.Plane();
@@ -432,6 +416,12 @@ let raycaster = new THREE.Raycaster();
 let offset = new THREE.Vector3();
 let intersection = new THREE.Vector3();
 let mouse = new THREE.Vector2();
+let isInspecting = false;
+let originalPosition = new THREE.Vector3();
+let originalMass;
+let originalRotation = new THREE.Quaternion();
+let initialRotation = new THREE.Quaternion();
+
 
 renderer.domElement.addEventListener('mousedown', function(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -439,24 +429,83 @@ renderer.domElement.addEventListener('mousedown', function(event) {
     raycaster.setFromCamera(mouse, camera);
     if (raycaster.ray.intersectBox(new THREE.Box3().setFromObject(greenrock), intersection)) {
         isDragging = true;
-        isPhysicsPaused = true;
+        originalMass = greenrockBody.mass; // Save the original mass
+        greenrockBody.mass = 0; // Set the mass to 0 to disable gravity
+        greenrockBody.updateMassProperties(); // Update the mass propertie
+        originalRotation.copy(greenrock.quaternion); // Save the current rotation
         plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(plane.normal), intersection);
-        if (raycaster.ray.intersectPlane(plane, intersection)) {
-            offset.copy(intersection).sub(greenrock.position);
+            if (raycaster.ray.intersectPlane(plane, intersection)) {
+                offset.copy(intersection).sub(greenrock.position);
+            }
+        }
+});
+
+let progress = 0;
+let hasInspected = false;
+
+window.addEventListener('keydown', function(event) {
+    if (event.key === 'f' || event.key === 'F') {
+        if (isInspecting) {
+            // Exit inspection mode
+            console.log("exit");
+            isInspecting = false;
+            progress = 0; // Start the animation
+            originalRotation.copy(greenrock.quaternion); 
+            greenrockBody.position.copy(greenrock.position); // Update the body position
+            greenrockBody.velocity.set(0, 0, 0); // Reset the body velocity
+            greenrockBody.mass = originalMass; // Restore the original mass
+            greenrockBody.updateMassProperties(); // Update the mass properties
+            greenrockBody.type = CANNON.Body.DYNAMIC; // Set the body back to dynamic after a small delay
+            console.log(greenrockBody);
+        } 
+        else {
+            // Enter inspection mode
+            console.log("enter inspection");
+            isInspecting = true;
+            hasInspected = true;
+            originalPosition.copy(greenrock.position);
+            originalMass = greenrockBody.mass; // Save the original mass
+            greenrock.position.set(0, 10, 10); // Move the object to the desired position
+            greenrockBody.position.copy(greenrock.position);
+            greenrockBody.type = CANNON.Body.KINEMATIC; // Set the body to kinematic to control its position directly
+            greenrockBody.mass = 0; // Set the mass to 0 to disable gravity
+            greenrockBody.updateMassProperties(); // Update the mass properties
         }
     }
 });
 
 renderer.domElement.addEventListener('mousemove', function(event) {
-    if (!isDragging){
-     return;
+    if (isDragging) {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        if (raycaster.ray.intersectPlane(plane, intersection)) {
+            if (isInspecting) {
+                // Rotate the object with the mouse
+                let deltaRotationQuaternion = new THREE.Quaternion()
+                    .setFromEuler(new THREE.Euler(
+                        (event.movementY / window.innerHeight) * 4,
+                        (event.movementX / window.innerWidth) * 4,
+                        0,
+                        'XYZ'
+                    ));
+                greenrock.quaternion.multiplyQuaternions(deltaRotationQuaternion, greenrock.quaternion);
+                greenrockBody.quaternion.copy(greenrock.quaternion);
+            } else {
+                greenrock.position.copy(intersection.sub(offset));
+                greenrockBody.position.copy(greenrock.position);
+            }
+        }
     }
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
-    if (raycaster.ray.intersectPlane(plane, intersection)) {
-        greenrock.position.copy(intersection.sub(offset));
-        greenrockBody.position.copy(greenrock.position); 
+});
+
+renderer.domElement.addEventListener('mouseup', function(event) {
+    if (isDragging) {
+        isDragging = false;
+        if (!isInspecting) {
+            greenrockBody.mass = originalMass; // Restore the original mass
+            greenrockBody.updateMassProperties(); // Update the mass properties
+        }
     }
 });
 
@@ -481,26 +530,28 @@ function objectRecycled() {
     });
 }
 
-// collision for the greenrock and bin
-renderer.domElement.addEventListener('mouseup', function(event) {
-    isDragging = false;
-    isPhysicsPaused = false;
-    greenrockBody.type = CANNON.Body.DYNAMIC; // Set the body back to dynamic when the drag ends
+var composer = new EffectComposer(renderer);
 
-    // greenrockBody.addEventListener("beginContact", function (event) {
-    //     console.log("yuh");
-    //     if (event.body === binBody) { // If the other body is the bin body
-    //         objectRecycled();
-    //         scene.remove(greenrock); // Remove the greenrock mesh from the scene
-    //         world.remove(greenrockBody); // Remove the greenrock body from the physics world
-    //     }
-    // });
+// Add a RenderPass
+composer.addPass(new RenderPass(scene, camera));
 
+
+// Add a Brightness/Contrast pass
+var brightnessContrastPass = new ShaderPass(BrightnessContrastShader);
+brightnessContrastPass.uniforms['brightness'].value = 0 // Reduce brightness
+brightnessContrastPass.uniforms['contrast'].value = 0 // Reduce contrast
+composer.addPass(brightnessContrastPass);
+
+let bokehPass = new BokehPass(scene, camera, {
+    focus: camera.position,
+    aperture: 0.0025,
+    maxblur: 0.01,
+    width: WIDTH,
+    height: HEIGHT
 });
+
+
 let isInBin = false;
-
-// 60 fps lock 
-
 function update(){
     // physics update
     if (!isPhysicsPaused) {
@@ -516,7 +567,7 @@ function update(){
         let sumHalfExtentsX = greenrockBody.shapes[0].halfExtents.x + binBody.shapes[0].halfExtents.x;
         let sumHalfExtentsY = greenrockBody.shapes[0].halfExtents.y + binBody.shapes[0].halfExtents.y;
         let sumHalfExtentsZ = greenrockBody.shapes[0].halfExtents.z + binBody.shapes[0].halfExtents.z;
-    
+
         if (distanceX < sumHalfExtentsX && distanceY < sumHalfExtentsY && distanceZ < sumHalfExtentsZ) {
             if (!isInBin) {
                 // The greenrockBody is colliding with the binBody
@@ -537,6 +588,14 @@ function update(){
         recycleBinMesh.quaternion.copy(binBody.quaternion);
     }
 
+    if (hasInspected && !isInspecting && progress < 1) {
+        progress += 0.01; // Adjust this value to control the speed of the animation
+        greenrock.position.lerp(originalPosition, progress);
+        greenrock.quaternion.slerp(initialRotation, progress);
+        greenrockBody.position.copy(greenrock.position);
+        greenrockBody.quaternion.copy(greenrock.quaternion);
+    }
+
 }
 // render function
 function render(){
@@ -544,8 +603,8 @@ function render(){
     composer.render();
 }
 
-//requestAnimationFrame(render);
-    return {scene, camera, render, update, gui};
+// return to main 
+return {scene, camera, render, update, gui};
 }
 
 
