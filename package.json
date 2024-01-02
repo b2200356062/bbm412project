@@ -2,6 +2,7 @@
   "name": "SpaceshipGoesBrrr",
   "version": "1.0.0",
   "dependencies": {
+    "cannon-es": "^0.20.0",
     "dat.gui": "^0.7.9",
     "three": "^0.160.0"
   }
