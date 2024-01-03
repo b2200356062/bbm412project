@@ -30,7 +30,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setClearColor(0x000000, 1); // arkaplan rengi
 
-// Create a div element
+// UI
 var div = document.createElement('div');
 div.style.position = 'absolute';
 div.style.top = '40px';
@@ -42,7 +42,7 @@ div.style.backgroundSize = 'cover';
 div.style.color = 'white'; 
 div.style.padding = '40px';
 div.style.fontFamily = 'monospace'; 
-div.style.fontSize = 'large';
+div.style.fontSize = '17px';
 
 var text = document.createTextNode('Drop the objects into their respective bins to recycle them and help space be a cleaner place!');
 var text1 = document.createTextNode('You can use arrow keys to change camera direction');
@@ -51,9 +51,12 @@ var text3 = document.createTextNode('Press F to enter and exit the inspection mo
 var text4 = document.createTextNode('In inspection mode you can use mouse to rotate the object');
 var text5 = document.createTextNode('You should put "" objects to "" bins, otherwise you will not get any points!');
 var points = 0;
-// Create a text node for the points
 var pointsText = document.createTextNode('Points: ' + points);
 
+div.appendChild(pointsText);
+var newline = document.createElement('div');
+newline.style.height = '20px'; // Adjust the height as needed
+div.appendChild(newline);
 div.appendChild(text);
 var newline = document.createElement('div');
 newline.style.height = '20px'; // Adjust the height as needed
@@ -75,10 +78,7 @@ var newline = document.createElement('div');
 newline.style.height = '20px'; // Adjust the height as needed
 div.appendChild(newline);
 div.appendChild(text5);
-var newline = document.createElement('div');
-newline.style.height = '20px'; // Adjust the height as needed
-div.appendChild(newline);
-div.appendChild(pointsText);
+
 document.body.appendChild(div);
 
 // physics
@@ -137,6 +137,7 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
         });
     });
 }
+
 Promise.all([
     loadModel('table', 'table/scene.gltf', new THREE.Vector3(0, -15, 10), new THREE.Vector3(0.05, 0.08, 0.08), new THREE.Euler(0,0,0), 0, true, true),
     loadModel('lamp', 'oldlamp/scene.gltf', new THREE.Vector3(0, 25, 10), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, Math.PI/2,0), 0, false, false),
@@ -172,7 +173,6 @@ textureLoader.load('walltext.png', function(texture) {
     wall.rotation.set(0, Math.PI/2, 0);
     scene.add(wall);
 });
-
 
 // right wall
 textureLoader.load('walltext.png', function(texture) {
@@ -301,7 +301,6 @@ gui.add(parameters, 'Spotlight Switch')
         spotlight.visible = value;
     });
 
-
 //     gui.add({name: 'Spotlight Rotation X', value: spotlight.angle}, 'value', -90, 100)
 //     .name('Spotlight Rotation X')
 //     .onChange(function(value) {
@@ -319,7 +318,6 @@ gui.add(parameters, 'Spotlight Switch')
 //     .onChange(function(value) {
 //         spotlight.target.position.z = value;
 //     });
-
 
 
 let lookAtVector = new THREE.Vector3(0, 0, -1);
@@ -400,7 +398,6 @@ window.addEventListener('keydown', (event) =>{
     camera.lookAt(lookAtVector);
 });
 
-
 function objectRecycled() {
 
     points += 10; // Increase the points
@@ -439,7 +436,6 @@ let bokehPass = new BokehPass(scene, camera, {
 });
 
 //composer.addPass(bokehPass);
-
 
 let isInBin = false;
 function update(){
