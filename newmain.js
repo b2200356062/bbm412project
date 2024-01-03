@@ -3,9 +3,9 @@ import tableScene from './tablescene.js';
 import Stats from "three/addons/libs/stats.module.js";
 import * as THREE from 'three';
 
-const stats = new Stats();
-stats.showPanel(0);
-document.body.appendChild(stats.dom);
+// const stats = new Stats();
+// stats.showPanel(0);
+// document.body.appendChild(stats.dom);
 
 let renderer = new THREE.WebGLRenderer();
 let modelsLoaded = false;
@@ -33,7 +33,6 @@ function switchScene(sceneName) {
         console.error('The scene does not exist:', sceneName);
         return;
     }
-
     // Switch to the new scene
     currentScene = sceneName;
 }
@@ -59,15 +58,9 @@ window.addEventListener('resize', function () {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-
-
-// In the 
 function render() {
-
     scenes[currentScene].update();
     scenes[currentScene].render();
-    
-    stats.update();
 
     requestAnimationFrame(render);
 }

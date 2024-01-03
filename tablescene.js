@@ -6,9 +6,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { BrightnessContrastShader } from 'three/examples/jsm/shaders/BrightnessContrastShader.js';
-import {BokehPass} from 'three/examples/jsm/postprocessing/BokehPass.js';
+import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 
 export default function tableScene(){
 
@@ -31,136 +30,122 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setClearColor(0x000000, 1); // arkaplan rengi
 
-// objects
-var objects = [];
-var table, newlamp, greenrock, bin;
+// Create a div element
+var div = document.createElement('div');
+div.style.position = 'absolute';
+div.style.top = '40px';
+div.style.left = '10px';
+div.style.width = '250px'; 
+div.style.height = '600px'; 
+div.style.backgroundImage = 'url(ui/card1/cardx1.png)';
+div.style.backgroundSize = 'cover'; 
+div.style.color = 'white'; 
+div.style.padding = '40px';
+div.style.fontFamily = 'monospace'; 
+div.style.fontSize = 'large';
 
-// world for physics
+var text = document.createTextNode('Drop the objects into their respective bins to recycle them and help space be a cleaner place!');
+var text1 = document.createTextNode('You can use arrow keys to change camera direction');
+var text2 = document.createTextNode('You can use mouse to move objects');
+var text3 = document.createTextNode('Press F to enter and exit the inspection mode');
+var text4 = document.createTextNode('In inspection mode you can use mouse to rotate the object');
+var text5 = document.createTextNode('You should put "" objects to "" bins, otherwise you will not get any points!');
+var points = 0;
+// Create a text node for the points
+var pointsText = document.createTextNode('Points: ' + points);
+
+div.appendChild(text);
+var newline = document.createElement('div');
+newline.style.height = '20px'; // Adjust the height as needed
+div.appendChild(newline);
+div.appendChild(text1);
+var newline = document.createElement('div');
+newline.style.height = '20px'; // Adjust the height as needed
+div.appendChild(newline);
+div.appendChild(text2);
+var newline = document.createElement('div');
+newline.style.height = '20px'; // Adjust the height as needed
+div.appendChild(newline);
+div.appendChild(text3);
+var newline = document.createElement('div');
+newline.style.height = '20px'; // Adjust the height as needed
+div.appendChild(newline);
+div.appendChild(text4);
+var newline = document.createElement('div');
+newline.style.height = '20px'; // Adjust the height as needed
+div.appendChild(newline);
+div.appendChild(text5);
+var newline = document.createElement('div');
+newline.style.height = '20px'; // Adjust the height as needed
+div.appendChild(newline);
+div.appendChild(pointsText);
+document.body.appendChild(div);
+
+// physics
 const world = new CANNON.World();
 world.gravity.set(0, -9.82, 0); // m/s²
 
-// texture loader with set path of textures folder
 const loader = new GLTFLoader();
-loader.load('table/scene.gltf', function (gltf) {
-    table = gltf.scene;
-    table.traverse((node) => {
-        if (node instanceof THREE.Mesh) {
-            node.castShadow = true;
-            node.receiveShadow = true;
-        }
-    });
-    table.scale.set(0.05, 0.08, 0.08);
-    table.position.set(0, -15, 10);
+let objects = {};
+let table, lamp, greenrock, bin, robot;
 
-    // Calculate the bounding box of the table
-    const box = new THREE.Box3().setFromObject(table);
-    const size = box.getSize(new THREE.Vector3());
+// load model function
+function loadModel(name, path, position, scale, rotation, mass, castShadow, recieveShadow) {
+    return new Promise((resolve, reject) => {        
+        loader.load(path, function (gltf) {
+            const model = gltf.scene;
+            model.traverse((node) => {
+                if (node instanceof THREE.Mesh) {
+                    node.castShadow = castShadow;
+                    node.receiveShadow = recieveShadow;
+                }
+            });
+            model.scale.set(scale.x, scale.y, scale.z);
+            model.position.copy(position);
+            model.rotation.copy(rotation);
 
-    // Create a box shape for the table with the actual size of the table
-    const tableShape = new CANNON.Box(new CANNON.Vec3(size.x / 2.2, size.y / 1.3, size.z/2));
+            // Calculate the bounding box of the model
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+    
+            if (name === 'table') {
+                size.y *= 1.5;
+            }
 
-    // Create a body for the table and add the shape to it
-    const tableBody = new CANNON.Body({ mass: 0 }); // The table is static, so its mass is 0
-    tableBody.addShape(tableShape);
-    tableBody.position.copy(table.position);
-    world.addBody(tableBody);
+            // Create a box shape for the model with the actual size of the model
+            const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
 
-    scene.add(table);
-});
+            // Create a body for the model and add the shape to it
+            const body = new CANNON.Body({ mass: mass });
+            body.addShape(shape);
+            body.position.copy(model.position);
 
-loader.load('oldlamp/scene.gltf', function (gltf) {
-    newlamp = gltf.scene;
-    newlamp.traverse((node) => {
-        if (node instanceof THREE.Mesh) {
-            //node.castShadow = true;
-            //node.receiveShadow = true;
-        }
-    });
-    newlamp.scale.set(0.3, 0.3, 0.3);
-    newlamp.position.set(0, 25, 10);
-    newlamp.rotation.set(0, Math.PI/2, 0)
-    scene.add(newlamp);
-});
+            // Set the quaternion of the body using the Euler angles of the model
+            body.quaternion.setFromEuler(model.rotation.x, model.rotation.y, model.rotation.z);
 
+            world.addBody(body);
 
-// async loader for greenrock 
-function loadModel(url) {
-    return new Promise((resolve, reject) => {
-        loader.load(url, (gltf) => {
-            resolve(gltf.scene);
-        }, undefined, reject);
+            scene.add(model);
+
+            // Add the model and its body to the objects object
+            objects[name] = { model: model, body: body };
+
+            resolve({ model: model, body: body });
+        }, undefined, function (error) {
+            console.error('An error occurred while loading the model:', error);
+            reject(error);
+        });
     });
 }
+Promise.all([
+    loadModel('table', 'table/scene.gltf', new THREE.Vector3(0, -15, 10), new THREE.Vector3(0.05, 0.08, 0.08), new THREE.Euler(0,0,0), 0, true, true),
+    loadModel('lamp', 'oldlamp/scene.gltf', new THREE.Vector3(0, 25, 10), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, Math.PI/2,0), 0, false, false),
+    loadModel('greenrock', 'greenrock/scene.gltf', new THREE.Vector3(0, 3, 10), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 3, true, true),
+    loadModel('bin', 'cop/scene.gltf', new THREE.Vector3(17, -10, 17), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true),
+    loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 0, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true)
+]).then(() => {
 
-let greenrockBody;
-
-loadModel('greenrock/scene.gltf').then((model) => {
-    greenrock = model;
-    greenrock.traverse((node) => {
-        if (node instanceof THREE.Mesh) {
-            node.castShadow = true;
-        }
-    });
-    greenrock.scale.set(1.5, 1.5, 1.5);
-    greenrock.position.set(0, 5, 10);
-    scene.add(greenrock);
-    objects.push(greenrock);
-
-    // Create a box body for the greenrock
-    const greenrockShape = new CANNON.Box(new CANNON.Vec3(1, 1, 1)); // Replace with the actual size of the greenrock
-    greenrockBody = new CANNON.Body({ mass: 3}); // Replace with the actual mass of the greenrock
-    greenrockBody.addShape(greenrockShape);
-    greenrockBody.position.copy(greenrock.position);
-    world.addBody(greenrockBody);
-    greenrockBody.collisionResponse = true;
-
-}).catch((error) => {
-    console.error('Error loading model:', error);
-});
-
-// bounding box for greenrock for debugging
-// const boxGeometry = new THREE.BoxGeometry(2, 2, 2); // The size should be twice the size of the Cannon.js Vec3
-// const boxMaterial = new THREE.MeshBasicMaterial({wireframe: true, color: 0xff0000});
-// const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
-// scene.add(boxMesh);
-
-var binBody, recycleBinMesh;
-
-// recycle bin
-loader.load('cop/scene.gltf', function (gltf) {
-    bin = gltf.scene;
-    bin.traverse((node) => {
-        if (node instanceof THREE.Mesh) {
-            node.castShadow = true;
-            node.receiveShadow = true;
-        }
-    });
-    bin.scale.set(0.08, 0.08, 0.08);
-    bin.position.set(17,-10, 17);
-    
-    scene.add(bin);
-
-    const box = new THREE.Box3().setFromObject(bin);
-    const size = box.getSize(new THREE.Vector3());
-
-    const recycleBinShape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
-    binBody = new CANNON.Body({ mass: 0 }); // The recycle bin is static, so its mass is 0
-    binBody.addShape(recycleBinShape);
-    binBody.position.copy(bin.position);
-    world.addBody(binBody);
-
-    binBody.collisionResponse = true;
-
-    // // Create a box geometry for the recycle bin
-    // const recycleBinGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
-    // const recycleBinMaterial = new THREE.MeshBasicMaterial({wireframe: true, color: 0xff0000});
-    // recycleBinMesh = new THREE.Mesh(recycleBinGeometry, recycleBinMaterial);
-    // recycleBinMesh.position.copy(binBody.position);
-    // console.log('Size:', size.x, size.y, size.z);
-    // scene.add(recycleBinMesh);
-});
-
-    
+}).catch(console.error);
 
 // TEXTURES
 var textureLoader = new THREE.TextureLoader().setPath('textures/');
@@ -205,7 +190,7 @@ textureLoader.load('walltext.png', function(texture) {
 // floor texture
 textureLoader.load('floortext.jpg', function(texture) {
     // Create the geometry and material
-    var geometry = new THREE.PlaneGeometry(100, 50); // Adjust the size as needed
+    var geometry = new THREE.PlaneGeometry(100, 70); // Adjust the size as needed
     var material = new THREE.MeshStandardMaterial({ map: texture });
 
     // Create the mesh and add it to the scene
@@ -240,15 +225,11 @@ textureLoader.load('ceilingtext.png', function(texture) {
     scene.add(ceiling);
 });
 
-// parameter for spotlight switch on/off
-var parameters = {
-    'Spotlight Switch': true
-};
-
 // spotlight
 const spotlight = new THREE.SpotLight(0xffff00, 250, 20, Math.PI / 4, 0.25, 1);
 spotlight.position.set(0, 10, 10);
 spotlight.target.position.set(0, 0, 10);
+spotlight.castShadow = true;
 scene.add(spotlight);
 const spotlighthelper = new THREE.SpotLightHelper( spotlight );
 //scene.add( spotlighthelper );
@@ -269,14 +250,14 @@ directionallight.position.set(0, 24, 0);
 directionallight.castShadow = true;
 
 // Adjust the shadow camera's frustum
-directionallight.shadow.camera.left = -50; // Adjust as needed
-directionallight.shadow.camera.right = 50; // Adjust as needed
-directionallight.shadow.camera.top = 50; // Adjust as needed
-directionallight.shadow.camera.bottom = -50; // Adjust as needed
-directionallight.shadow.camera.near = 0.1; // Adjust as needed
-directionallight.shadow.camera.far = 50; // Adjust as needed
-directionallight.shadow.mapSize.width = 1024; // Adjust as needed
-directionallight.shadow.mapSize.height = 1024; // Adjust as needed
+directionallight.shadow.camera.left = -50; 
+directionallight.shadow.camera.right = 50; 
+directionallight.shadow.camera.top = 50; 
+directionallight.shadow.camera.bottom = -50; 
+directionallight.shadow.camera.near = 0.01; 
+directionallight.shadow.camera.far = 50;
+directionallight.shadow.mapSize.width = 1024; 
+directionallight.shadow.mapSize.height = 1024;
 const shadowCameraHelper = new THREE.CameraHelper(directionallight.shadow.camera);
 //scene.add(shadowCameraHelper);
 const directionallighthelper = new THREE.DirectionalLightHelper( directionallight, 20, 0xff0000);
@@ -284,37 +265,42 @@ const directionallighthelper = new THREE.DirectionalLightHelper( directionalligh
 scene.add(directionallight);
 
 // GUI FOR LIGHTS AND STATS
-
-// const controls = new OrbitControls(camera, renderer.domElement);
-// controls.update();
-// controls.enableDamping = true;
-// controls.dampingFactor = 0.02;
-// controls.enablePan = false;
-// if(greenrock){
-//     controls.target = greenrock.position;
-// }
-
-
 const gui = new GUI();
 gui.width = 320;
 
-gui.add({name: 'Spotlight X', value: spotlight.position.x}, 'value', -100, 100)
+gui.add({name: 'Spotlight X', value: spotlight.position.x}, 'value', -30, 30)
     .name('Spotlight X')
     .onChange(function(value) {
         spotlight.position.x = value;
     });
 
-gui.add({name: 'Spotlight Y', value: spotlight.position.y}, 'value', -100, 100)
+gui.add({name: 'Spotlight Y', value: spotlight.position.y}, 'value', -30, 50)
     .name('Spotlight Y')
     .onChange(function(value) {
         spotlight.position.y = value;
     });
 
-gui.add({name: 'Spotlight Z', value: spotlight.position.z}, 'value', -100, 100)
+gui.add({name: 'Spotlight Z', value: spotlight.position.z}, 'value', -30, 50)
     .name('Spotlight Z')
     .onChange(function(value) {
         spotlight.position.z = value;
     });
+
+gui.add({name: 'Spotlight Intensity', value: spotlight.intensity}, 'value', 0, 500)
+    .name('Spotlight Intensity')
+    .onChange(function(value) {
+        spotlight.intensity = value;
+    });
+
+var parameters = {
+        'Spotlight Switch': true
+    };
+gui.add(parameters, 'Spotlight Switch')
+    .name('Spotlight On/Off')
+    .onChange(function(value) {
+        spotlight.visible = value;
+    });
+
 
 //     gui.add({name: 'Spotlight Rotation X', value: spotlight.angle}, 'value', -90, 100)
 //     .name('Spotlight Rotation X')
@@ -334,40 +320,48 @@ gui.add({name: 'Spotlight Z', value: spotlight.position.z}, 'value', -100, 100)
 //         spotlight.target.position.z = value;
 //     });
 
-gui.add({name: 'Spotlight Intensity', value: spotlight.intensity}, 'value', 0, 500)
-    .name('Spotlight Intensity')
-    .onChange(function(value) {
-        spotlight.intensity = value;
-    });
-    
-gui.add(parameters, 'Spotlight Switch')
-    .name('Spotlight On/Off')
-    .onChange(function(value) {
-        spotlight.visible = value;
-    });
 
 
 let lookAtVector = new THREE.Vector3(0, 0, -1);
-camera.lookAt(lookAtVector);    
+camera.lookAt(lookAtVector);
+
 // keyboard camera for debugging
 window.addEventListener('keydown', (event) =>{
     switch (event.code){
         case 'KeyA':
+            if(camera.position.x < -25){
+                break;
+            }
             camera.position.x -= 5;
             break;
         case 'KeyD':
+            if(camera.position.x > 25){
+                break;
+            }
             camera.position.x += 5;
             break;
         case 'KeyW':
+            if(camera.position.z < -50){
+                break;
+            }
             camera.position.z -= 5;
             break;
         case 'KeyS':
+            if(camera.position.z > 50){
+                break;
+            }
             camera.position.z += 5;
             break;
         case 'KeyQ':
+            if(camera.position.y > 25){
+                break;
+            }
             camera.position.y += 5;
             break;
         case 'KeyE':
+            if(camera.position.y < -25){
+                break;
+            }
             camera.position.y -= 5;
             break;
         case 'ArrowUp':
@@ -375,7 +369,7 @@ window.addEventListener('keydown', (event) =>{
             if(lookAtVector.y > 25){
                 break;
             }
-            lookAtVector.y += 1;
+            lookAtVector.y += 2;
             event.preventDefault();
             break;
         case 'ArrowDown':
@@ -383,7 +377,7 @@ window.addEventListener('keydown', (event) =>{
             if(lookAtVector.y < -25){
                 break;
             }
-            lookAtVector.y -= 1;
+            lookAtVector.y -= 2;
             event.preventDefault();
             break;
         case 'ArrowLeft':
@@ -391,8 +385,7 @@ window.addEventListener('keydown', (event) =>{
             if(lookAtVector.x < -25){
                 break;
             }
-            
-            lookAtVector.x -= 1;
+            lookAtVector.x -= 2;
             event.preventDefault();
             break;
         case 'ArrowRight':
@@ -400,120 +393,18 @@ window.addEventListener('keydown', (event) =>{
             if(lookAtVector.x > 25){
                 break;
             }
-            lookAtVector.x += 1;
+            lookAtVector.x += 2;
             event.preventDefault();
             break;
     }
-    console.log(lookAtVector.x);
     camera.lookAt(lookAtVector);
 });
 
-// algorithm for the collision detection, drag and rotation controls for the object
-let isDragging = false;
-let isPhysicsPaused = false;
-let plane = new THREE.Plane();
-let raycaster = new THREE.Raycaster();
-let offset = new THREE.Vector3();
-let intersection = new THREE.Vector3();
-let mouse = new THREE.Vector2();
-let isInspecting = false;
-let originalPosition = new THREE.Vector3();
-let originalMass;
-let originalRotation = new THREE.Quaternion();
-let initialRotation = new THREE.Quaternion();
-
-
-renderer.domElement.addEventListener('mousedown', function(event) {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
-    if (raycaster.ray.intersectBox(new THREE.Box3().setFromObject(greenrock), intersection)) {
-        isDragging = true;
-        originalMass = greenrockBody.mass; // Save the original mass
-        greenrockBody.mass = 0; // Set the mass to 0 to disable gravity
-        greenrockBody.updateMassProperties(); // Update the mass propertie
-        originalRotation.copy(greenrock.quaternion); // Save the current rotation
-        plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(plane.normal), intersection);
-            if (raycaster.ray.intersectPlane(plane, intersection)) {
-                offset.copy(intersection).sub(greenrock.position);
-            }
-        }
-});
-
-let progress = 0;
-let hasInspected = false;
-
-window.addEventListener('keydown', function(event) {
-    if (event.key === 'f' || event.key === 'F') {
-        if (isInspecting) {
-            // Exit inspection mode
-            console.log("exit");
-            isInspecting = false;
-            progress = 0; // Start the animation
-            originalRotation.copy(greenrock.quaternion); 
-            greenrockBody.position.copy(greenrock.position); // Update the body position
-            greenrockBody.velocity.set(0, 0, 0); // Reset the body velocity
-            greenrockBody.mass = originalMass; // Restore the original mass
-            greenrockBody.updateMassProperties(); // Update the mass properties
-            greenrockBody.type = CANNON.Body.DYNAMIC; // Set the body back to dynamic after a small delay
-            console.log(greenrockBody);
-        } 
-        else {
-            // Enter inspection mode
-            console.log("enter inspection");
-            isInspecting = true;
-            hasInspected = true;
-            originalPosition.copy(greenrock.position);
-            originalMass = greenrockBody.mass; // Save the original mass
-            greenrock.position.set(0, 10, 10); // Move the object to the desired position
-            greenrockBody.position.copy(greenrock.position);
-            greenrockBody.type = CANNON.Body.KINEMATIC; // Set the body to kinematic to control its position directly
-            greenrockBody.mass = 0; // Set the mass to 0 to disable gravity
-            greenrockBody.updateMassProperties(); // Update the mass properties
-        }
-    }
-});
-
-renderer.domElement.addEventListener('mousemove', function(event) {
-    if (isDragging) {
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        if (raycaster.ray.intersectPlane(plane, intersection)) {
-            if (isInspecting) {
-                // Rotate the object with the mouse
-                let deltaRotationQuaternion = new THREE.Quaternion()
-                    .setFromEuler(new THREE.Euler(
-                        (event.movementY / window.innerHeight) * 4,
-                        (event.movementX / window.innerWidth) * 4,
-                        0,
-                        'XYZ'
-                    ));
-                greenrock.quaternion.multiplyQuaternions(deltaRotationQuaternion, greenrock.quaternion);
-                greenrockBody.quaternion.copy(greenrock.quaternion);
-            } else {
-                greenrock.position.copy(intersection.sub(offset));
-                greenrockBody.position.copy(greenrock.position);
-            }
-        }
-    }
-});
-
-renderer.domElement.addEventListener('mouseup', function(event) {
-    if (isDragging) {
-        isDragging = false;
-        if (!isInspecting) {
-            greenrockBody.mass = originalMass; // Restore the original mass
-            greenrockBody.updateMassProperties(); // Update the mass properties
-        }
-    }
-});
-
-let score = 0;
 
 function objectRecycled() {
-    score++;
-    document.getElementById('points').textContent = 'Points: ' + score;
+
+    points += 10; // Increase the points
+    pointsText.nodeValue = 'Points: ' + points; // Update the points on the UI
     
     // sound effect
     const listener = new THREE.AudioListener();
@@ -529,12 +420,9 @@ function objectRecycled() {
         sound.play();
     });
 }
-
 var composer = new EffectComposer(renderer);
-
 // Add a RenderPass
 composer.addPass(new RenderPass(scene, camera));
-
 
 // Add a Brightness/Contrast pass
 var brightnessContrastPass = new ShaderPass(BrightnessContrastShader);
@@ -543,68 +431,29 @@ brightnessContrastPass.uniforms['contrast'].value = 0 // Reduce contrast
 composer.addPass(brightnessContrastPass);
 
 let bokehPass = new BokehPass(scene, camera, {
-    focus: camera.position,
+    focus: camera.position.toDistance,
     aperture: 0.0025,
     maxblur: 0.01,
     width: WIDTH,
     height: HEIGHT
 });
 
+//composer.addPass(bokehPass);
+
 
 let isInBin = false;
 function update(){
-    // physics update
-    if (!isPhysicsPaused) {
-        world.step(1 / 60);
-    } 
-    if (greenrock && greenrockBody && bin) {
-        
-        // distance calculation for the colliison
-        let distanceX = Math.abs(greenrockBody.position.x - binBody.position.x);
-        let distanceY = Math.abs(greenrockBody.position.y - binBody.position.y);
-        let distanceZ = Math.abs(greenrockBody.position.z - binBody.position.z);
-    
-        let sumHalfExtentsX = greenrockBody.shapes[0].halfExtents.x + binBody.shapes[0].halfExtents.x;
-        let sumHalfExtentsY = greenrockBody.shapes[0].halfExtents.y + binBody.shapes[0].halfExtents.y;
-        let sumHalfExtentsZ = greenrockBody.shapes[0].halfExtents.z + binBody.shapes[0].halfExtents.z;
-
-        if (distanceX < sumHalfExtentsX && distanceY < sumHalfExtentsY && distanceZ < sumHalfExtentsZ) {
-            if (!isInBin) {
-                // The greenrockBody is colliding with the binBody
-                scene.remove(greenrock); // Remove the greenrock mesh from the scene
-                world.remove(greenrockBody); // Remove the greenrock body from the physics world
-                objectRecycled();
-                isInBin = true;
-            }
-        }
-        greenrock.position.copy(greenrockBody.position);
-        greenrock.quaternion.copy(greenrockBody.quaternion);
-        // bounding box for greenrock for debugging
-        // boxMesh.position.copy(greenrockBody.position);
-        // boxMesh.quaternion.copy(greenrockBody.quaternion);
+    world.step(1 / 60);
+    for (let name in objects) {
+        objects[name].model.position.copy(objects[name].body.position);
+        objects[name].model.quaternion.copy(objects[name].body.quaternion);
     }
-    if (recycleBinMesh && binBody) {
-        recycleBinMesh.position.copy(binBody.position);
-        recycleBinMesh.quaternion.copy(binBody.quaternion);
-    }
-
-    if (hasInspected && !isInspecting && progress < 1) {
-        progress += 0.01; // Adjust this value to control the speed of the animation
-        greenrock.position.lerp(originalPosition, progress);
-        greenrock.quaternion.slerp(initialRotation, progress);
-        greenrockBody.position.copy(greenrock.position);
-        greenrockBody.quaternion.copy(greenrock.quaternion);
-    }
-
 }
+
 // render function
 function render(){
-    update();
     composer.render();
 }
-
 // return to main 
 return {scene, camera, render, update, gui};
 }
-
-
