@@ -101,7 +101,7 @@ world.gravity.set(0, -9.82, 0); // m/s²
 
 const loader = new GLTFLoader();
 let objects = {};
-
+let bodiesToRemove = [];
 let table, lamp, greenrock, bin, robot;
 let tableBody, greenrockBody, binBody, robotBody;
 
@@ -176,8 +176,6 @@ Promise.all([
 ]).then(() => {
 
     let binBody = objects['bin'].body;
-    
-
     let originalMass;
     let raycaster = new THREE.Raycaster();
     let mouse = new THREE.Vector2();
@@ -214,7 +212,7 @@ Promise.all([
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
             if(raycaster.ray.intersectPlane(plane, intersection)){
-                let direction = raycaster.ray.direction.clone().multiplyScalar(25); // adjust the scalar value as needed
+                let direction = raycaster.ray.direction.clone().multiplyScalar(22);
                 let newPosition = new THREE.Vector3().addVectors(camera.position, direction);
                 selectedObject.position.copy(newPosition);
                 selectedObject.userData.physicsBody.position.copy(selectedObject.position);
@@ -240,19 +238,13 @@ Promise.all([
         }
      }, false);
 
-     world.addEventListener('beginContact', function(event) {
-        // Check if the bin is one of the colliding bodies
-        if (event.bodyA === binBody || event.bodyB === binBody) {
-            // Get the other colliding body
-            let otherBody = event.bodyA === binBody ? event.bodyB : event.bodyA;
-            // Check if the other body is one of the interactable objects
-            if (otherBody.interactable) {
-                // Remove the object from the scene and the physics world
-                scene.remove(otherBody.mesh);
-                world.removeBody(otherBody);
-                // Call the objectRecycled function
-                objectRecycled();
-            }
+
+     binBody.addEventListener("collide", function(event) {
+        let otherBody = event.body;
+        // Check if the body has already been added to the list
+        if (!bodiesToRemove.includes(otherBody)) {
+            // Add the body to the list of bodies to be removed
+            bodiesToRemove.push(otherBody);
         }
     });
     
@@ -524,7 +516,7 @@ window.addEventListener('keydown', (event) =>{
 });
 
 function objectRecycled() {
-
+    console.log("cagrıldım");
     points += 10; // Increase the points
     pointsText.nodeValue = 'Points: ' + points; // Update the points on the UI
     
@@ -562,13 +554,28 @@ let bokehPass = new BokehPass(scene, camera, {
 
 //composer.addPass(bokehPass);
 
-let isInBin = false;
 function update(){
     world.step(1 / 60);
     for (let name in objects) {
         objects[name].model.position.copy(objects[name].body.position);
         objects[name].model.quaternion.copy(objects[name].body.quaternion);
     }
+    for (let body of bodiesToRemove) {
+        // Find the name that corresponds to the body
+        let name = Object.keys(objects).find(name => objects[name].body === body);
+        if (name) {
+            // Get the model from the objects map
+            let model = objects[name].model;
+            if (model) {
+                scene.remove(model);
+            }
+            world.removeBody(body);
+            // Call the objectRecycled function
+            objectRecycled();
+        }
+    }
+    // Clear the list
+    bodiesToRemove = [];
 }
 
 // render function
