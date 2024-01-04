@@ -135,6 +135,10 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
                 size.y *= 0.7;
                 size.z *= 1.5;
             }
+            if(name ==='bin'){
+                size.y *= 0.5;
+                size.x *= 0.75;
+            }
             // Create a box shape for the model with the actual size of the model
             const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
 
@@ -170,58 +174,61 @@ Promise.all([
     //loadModel('reactor', 'nuclearreactor/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(3, 3, 3), new THREE.Euler(0, 0, 0), 6, true, true, true),
 
 ]).then(() => {
+
+    let binBody = objects['bin'].body;
     
+
+    let originalMass;
+    let raycaster = new THREE.Raycaster();
+    let mouse = new THREE.Vector2();
+    let selectedObject = null;
+    let inspectionMode = false;
+    let originalPosition = new THREE.Vector3();
+    let mouseDown = false;
+    let mousePosition = new THREE.Vector2();
+    let plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    let intersection = new THREE.Vector3();
+    let offset = new THREE.Vector3();
+
     window.addEventListener('mousedown', (event) => {
         mouseDown = true;
-        if (selectedObject) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-            if(raycaster.ray.intersectPlane(plane, intersection)){
-                offset.copy(intersection).sub(selectedObject.position);
-            }
-        }
-    }, false);
-    
-    window.addEventListener('mousemove', (event) => {
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
         let intersects = raycaster.intersectObjects(scene.children);
         if (intersects.length > 0 && intersects[0].object.interactable) {
             let intersectedObject = intersects[0].object;
-            // Traverse up the parent objects until we find an object with a physics body
             while (intersectedObject && !intersectedObject.userData.physicsBody) {
                 intersectedObject = intersectedObject.parent;
             }
             selectedObject = intersectedObject;
-            if(mouseDown && selectedObject){
-                if(raycaster.ray.intersectPlane(plane, intersection)){
-                    // Apply the offset when updating the object's position
-                    selectedObject.position.copy(intersection.sub(offset).multiplyScalar(1));
-                    // Check if the selected object has a physics body before trying to update it
-                    if (selectedObject.userData.physicsBody) {
-                        // Update the physics body's position
-                        selectedObject.userData.physicsBody.position.copy(selectedObject.position);
-                    } else {
-                        console.warn('Selected object does not have a physics body');
-                    }
-                }
+            if(raycaster.ray.intersectPlane(plane, intersection)){
+                offset.copy(intersection).sub(selectedObject.position);
+                selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
+            }
+        }
+    }, false);
+    window.addEventListener('mousemove', (event) => {
+        if (mouseDown && selectedObject && selectedObject.userData.physicsBody) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            if(raycaster.ray.intersectPlane(plane, intersection)){
+                let direction = raycaster.ray.direction.clone().multiplyScalar(25); // adjust the scalar value as needed
+                let newPosition = new THREE.Vector3().addVectors(camera.position, direction);
+                selectedObject.position.copy(newPosition);
+                selectedObject.userData.physicsBody.position.copy(selectedObject.position);
             }
         }
     }, false);
     window.addEventListener('mouseup', (event) => {
         mouseDown = false;
         if (selectedObject && selectedObject.userData.physicsBody) {
-            // Restore the original mass of the object
-            selectedObject.userData.physicsBody.mass = originalMass;
-            selectedObject.userData.physicsBody.updateMassProperties();
+            selectedObject.userData.physicsBody.type = CANNON.Body.DYNAMIC;
+            selectedObject = null;
         }
-        selectedObject = null;
     }, false);
-    
     window.addEventListener('keydown', (event) => {
-    
         if(event.key === 'f'){
             inspectionMode = !inspectionMode;
             if(inspectionMode && selectedObject){
@@ -232,6 +239,22 @@ Promise.all([
             }
         }
      }, false);
+
+     world.addEventListener('beginContact', function(event) {
+        // Check if the bin is one of the colliding bodies
+        if (event.bodyA === binBody || event.bodyB === binBody) {
+            // Get the other colliding body
+            let otherBody = event.bodyA === binBody ? event.bodyB : event.bodyA;
+            // Check if the other body is one of the interactable objects
+            if (otherBody.interactable) {
+                // Remove the object from the scene and the physics world
+                scene.remove(otherBody.mesh);
+                world.removeBody(otherBody);
+                // Call the objectRecycled function
+                objectRecycled();
+            }
+        }
+    });
     
 }).catch(console.error);
 
@@ -499,20 +522,6 @@ window.addEventListener('keydown', (event) =>{
     }
     camera.lookAt(lookAtVector);
 });
-
-let raycaster = new THREE.Raycaster();
-let mouse = new THREE.Vector2();
-let selectedObject = null;
-let inspectionMode = false;
-let originalPosition = new THREE.Vector3();
-let mouseDown = false;
-let mousePosition = new THREE.Vector2();
-let plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-let intersection = new THREE.Vector3();
-let offset = new THREE.Vector3();
-
-
-
 
 function objectRecycled() {
 
