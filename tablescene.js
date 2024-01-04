@@ -95,7 +95,6 @@ window.addEventListener('keydown', (event) => {
     }
 });
 
-
 // physics
 const world = new CANNON.World();
 world.gravity.set(0, -9.82, 0); // m/s²
@@ -132,8 +131,8 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
             }
             if(name === 'robot'){
                 size.y *= 0.7;
+                size.z *= 1.5;
             }
-
             // Create a box shape for the model with the actual size of the model
             const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
 
@@ -146,7 +145,6 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
             body.quaternion.setFromEuler(model.rotation.x, model.rotation.y, model.rotation.z);
 
             world.addBody(body);
-
             scene.add(model);
 
             // Add the model and its body to the objects object
@@ -169,7 +167,7 @@ Promise.all([
     //loadModel('reactor', 'nuclearreactor/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(3, 3, 3), new THREE.Euler(0, 0, 0), 6, true, true, true),
 
 ]).then(() => {
-
+    
 }).catch(console.error);
 
 // TEXTURES
@@ -253,10 +251,11 @@ textureLoader.load('ceilingtext.png', function(texture) {
 const spotlight = new THREE.SpotLight(0xffff00, 250, 20, Math.PI / 4, 0.25, 1);
 spotlight.position.set(0, 10, 10);
 spotlight.target.position.set(0, 0, 10);
+
 //spotlight.castShadow = true;
 scene.add(spotlight);
 const spotlighthelper = new THREE.SpotLightHelper( spotlight );
-//scene.add( spotlighthelper );
+scene.add( spotlighthelper );
 
 // ambient light
 const ambientlight = new THREE.AmbientLight(0xffffff, 2);
@@ -296,18 +295,21 @@ gui.add({name: 'Spotlight X', value: spotlight.position.x}, 'value', -30, 30)
     .name('Spotlight X')
     .onChange(function(value) {
         spotlight.position.x = value;
+        spotlight.updateMatrixWorld();
     });
 
 gui.add({name: 'Spotlight Y', value: spotlight.position.y}, 'value', -30, 50)
     .name('Spotlight Y')
     .onChange(function(value) {
         spotlight.position.y = value;
+        spotlight.updateMatrixWorld();
     });
 
 gui.add({name: 'Spotlight Z', value: spotlight.position.z}, 'value', -30, 50)
     .name('Spotlight Z')
     .onChange(function(value) {
         spotlight.position.z = value;
+        spotlight.updateMatrixWorld();
     });
 
 gui.add({name: 'Spotlight Intensity', value: spotlight.intensity}, 'value', 0, 500)
@@ -325,24 +327,35 @@ gui.add(parameters, 'Spotlight Switch')
         spotlight.visible = value;
     });
 
-//     gui.add({name: 'Spotlight Rotation X', value: spotlight.angle}, 'value', -90, 100)
-//     .name('Spotlight Rotation X')
-//     .onChange(function(value) {
-//         spotlight.target.position.x = value;
-//     });
+    let rotation = new THREE.Euler(-Math.PI, 0, 0, 'YXZ');
 
-// gui.add({name: 'Spotlight Rotation Y', value: spotlight.target.position.y}, 'value', -Math.PI, Math.PI)
-//     .name('Spotlight Rotation Y')
-//     .onChange(function(value) {
-//         spotlight.target.position.y = value;
-//     });
-
-// gui.add({name: 'Spotlight Rotation Z', value: spotlight.target.position.z}, 'value', -20, 20)
-//     .name('Spotlight Rotation Z')
-//     .onChange(function(value) {
-//         spotlight.target.position.z = value;
-//     });
-
+    gui.add({name: 'Spotlight Rotation X', value: rotation.x}, 'value', -Math.PI, Math.PI)
+        .name('Spotlight Rotation X')
+        .onChange(function(value) {
+            rotation.x = value;
+            updateSpotlightTarget();
+        });
+    
+    gui.add({name: 'Spotlight Rotation Y', value: rotation.y}, 'value', -Math.PI, Math.PI)
+        .name('Spotlight Rotation Y')
+        .onChange(function(value) {
+            rotation.y = value;
+            updateSpotlightTarget();
+        });
+    
+    gui.add({name: 'Spotlight Rotation Z', value: rotation.z}, 'value', 0, 2* Math.PI)
+        .name('Spotlight Rotation Z')
+        .onChange(function(value) {
+            rotation.z = value;
+            updateSpotlightTarget();
+        });
+    
+    function updateSpotlightTarget() {
+        let direction = new THREE.Vector3(0, 1, 0);
+        direction.applyEuler(rotation);
+        spotlight.target.position.copy(spotlight.position).add(direction);
+        spotlight.target.updateMatrixWorld();
+    }
 
 let lookAtVector = new THREE.Vector3(0, 0, -1);
 camera.lookAt(lookAtVector);
@@ -429,7 +442,7 @@ let inspectionMode = false;
 let originalPosition = new THREE.Vector3();
 let mouseDown = false;
 
-function onMouseMove(event) {
+window.addEventListener('mousemove', (event) => {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -437,129 +450,39 @@ function onMouseMove(event) {
 
     let intersects = raycaster.intersectObjects(scene.children);
     
-    if (!mouseDown) {
-        if (intersects.length > 0 && intersects[0].object.interactable) {
-            selectedObject = intersects[0].object;
-        } else {
-            selectedObject = null;
-        }
+    if (intersects.length > 0 && intersects[0].object.interactable) {
+        selectedObject = intersects[0].object;
     }
-}
-let originalRotation = null;
-function onKeyDown(event) {
-    if (event.key === 'f') {
-        inspectionMode = !inspectionMode;
+},false);
 
-        if (inspectionMode && selectedObject) {
-            // Store original rotation
-            originalRotation = selectedObject.rotation.clone();
 
-            if(selectedObject.name === 'Object_2'){
-                selectedObject.position.set(-6, 6, 4);
-            }
-            // Move object closer to camera
-            else{
-                selectedObject.position.set(0, 4, 6);
-            }
-            spotlight.position.set(0, 10, 25)
-            
-        } else if (!inspectionMode && selectedObject) {
-            // Restore original rotation
-            if (originalRotation) {
-                selectedObject.rotation.copy(originalRotation);
-                originalRotation = null;
-            }
-
-            // Move object back and apply physics
-            selectedObject.position.copy(originalPosition);
-            let body = selectedObject.userData.physicsBody;
-            if (body) {
-                body.position.copy(selectedObject.position);
-                body.quaternion.copy(selectedObject.quaternion);
-            }
-            spotlight.position.set(0, 10, 10);
-        }
-    }
-}
-
-function onMouseDown(event) {
+window.addEventListener('mousedown', (event) => {
     mouseDown = true;
-    previousMousePosition = {
-        x: event.clientX,
-        y: event.clientY
-    };
-    if (selectedObject && !inspectionMode) {
-        // Store original position
-        originalPosition.copy(selectedObject.position);
+
+    if (selectedObject) {
+        console.log("evet");
     }
-}
 
-let previousMousePosition = { x: 0, y: 0 };
+}, false);
 
-function onMouseDrag(event) {
-    if (mouseDown && selectedObject) {
-        let deltaMove = {
-            x: event.clientX - previousMousePosition.x,
-            y: event.clientY - previousMousePosition.y
-        };
+window.addEventListener('mouseup', (event) => {
 
-        if (inspectionMode) {
-            // Rotate object
-            selectedObject.rotation.y += deltaMove.x * 0.01;
-            selectedObject.rotation.x += deltaMove.y * 0.01;
+}, false);
+
+window.addEventListener('keydown', (event) => {
+
+    if(event.key === 'f'){
+        inspectionMode = !inspectionMode;
+        if(inspectionMode){
+            console.log("mode");
+            originalPosition.copy(selectedObject.position);
+            selectedObject.position.set(0, 0, 0);
         } else {
-            // Move object
-            let dragSpeed = 0.01; // Adjust this value to change the speed of dragging
-
-            let dragOffset = new THREE.Vector3(
-                deltaMove.x * dragSpeed, 
-                -deltaMove.y * dragSpeed, 
-                0
-            );
-            dragOffset.applyQuaternion(camera.quaternion);
-
-            selectedObject.position.add(dragOffset);
+            
+            selectedObject.position.copy(originalPosition);
         }
-
-        previousMousePosition = {
-            x: event.clientX,
-            y: event.clientY
-        };
     }
-}
-
-// function onMouseDrag(event) {
-//     if (mouseDown && selectedObject) {
-//         if (inspectionMode) {
-//             // Rotate object
-//             selectedObject.rotation.y += event.movementX * 0.03;
-//             selectedObject.rotation.x += event.movementY * 0.04;
-//         } else {
-//             if (selectedObject.name === 'robot') {
-//                 selectedObject.position.x += event.movementX * 0.02;
-//                 selectedObject.position.z -= event.movementY * 0.02; // Move robot along z-axis
-//             } 
-//             else {
-//                 selectedObject.position.x += event.movementX * 0.02;
-//                 selectedObject.position.y -= event.movementY * 0.02; // Move other objects along y-axis
-//             }
-//         }
-//     }
-// }
-
-function onMouseUp(event) {
-    mouseDown = false;
-    selectedObject = null;
-}
-
-
-window.addEventListener('mousemove', onMouseMove, false);
-window.addEventListener('mousedown', onMouseDown, false);
-window.addEventListener('mousemove', onMouseDrag, false);
-window.addEventListener('mouseup', onMouseUp, false);
-window.addEventListener('keydown', onKeyDown, false);
-
-
+ }, false);
 
 
 function objectRecycled() {

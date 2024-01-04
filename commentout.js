@@ -1403,3 +1403,283 @@
 
 //     robotBody.collisionResponse = true;
 // });
+
+
+// NEW OBJECT MOVE AND DRAG AND INSPECTION
+// let raycaster = new THREE.Raycaster();
+// let mouse = new THREE.Vector2();
+// let selectedObject = null;
+// let inspectionMode = false;
+// let originalPosition = new THREE.Vector3();
+// let mouseDown = false;
+
+// function onMouseMove(event) {
+//     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+//     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+//     raycaster.setFromCamera(mouse, camera);
+
+//     let intersects = raycaster.intersectObjects(scene.children);
+    
+//     if (!mouseDown) {
+//         if (intersects.length > 0 && intersects[0].object.interactable) {
+//             selectedObject = intersects[0].object;
+//         } else {
+//             selectedObject = null;
+//         }
+//     }
+// }
+// let originalRotation = null;
+// function onKeyDown(event) {
+//     if (event.key === 'f') {
+//         inspectionMode = !inspectionMode;
+
+//         if (inspectionMode && selectedObject) {
+//             // Store original rotation
+//             originalRotation = selectedObject.rotation.clone();
+
+//             if(selectedObject.name === 'Object_2'){
+//                 selectedObject.position.set(-6, 6, 4);
+//             }
+//             // Move object closer to camera
+//             else{
+//                 selectedObject.position.set(0, 4, 6);
+//             }
+//             spotlight.position.set(0, 10, 25)
+            
+//         } else if (!inspectionMode && selectedObject) {
+//             // Restore original rotation
+//             if (originalRotation) {
+//                 selectedObject.rotation.copy(originalRotation);
+//                 originalRotation = null;
+//             }
+
+//             // Move object back and apply physics
+//             selectedObject.position.copy(originalPosition);
+//             let body = selectedObject.userData.physicsBody;
+//             if (body) {
+//                 body.position.copy(selectedObject.position);
+//                 body.quaternion.copy(selectedObject.quaternion);
+//             }
+//             spotlight.position.set(0, 10, 10);
+//         }
+//     }
+// }
+
+// function onMouseDown(event) {
+//     mouseDown = true;
+//     previousMousePosition = {
+//         x: event.clientX,
+//         y: event.clientY
+//     };
+//     if (selectedObject && !inspectionMode) {
+//         // Store original position
+//         originalPosition.copy(selectedObject.position);
+//     }
+// }
+
+// let previousMousePosition = { x: 0, y: 0 };
+
+// function onMouseDrag(event) {
+//     if (mouseDown && selectedObject) {
+//         let deltaMove = {
+//             x: event.clientX - previousMousePosition.x,
+//             y: event.clientY - previousMousePosition.y
+//         };
+
+//         if (inspectionMode) {
+//             // Rotate object
+//             selectedObject.rotation.y += deltaMove.x * 0.01;
+//             selectedObject.rotation.x += deltaMove.y * 0.01;
+//         } else {
+//             // Move object
+//             let dragSpeed = 0.02; // Adjust this value to change the speed of dragging
+
+//             let dragOffset = new THREE.Vector3(
+//                 deltaMove.x * dragSpeed, 
+//                 -deltaMove.y * dragSpeed, 
+//                 0
+//             );
+//             dragOffset.applyQuaternion(camera.quaternion);
+
+//             selectedObject.position.add(dragOffset);
+//         }
+
+//         previousMousePosition = {
+//             x: event.clientX,
+//             y: event.clientY
+//         };
+//     }
+// }
+
+// // function onMouseDrag(event) {
+// //     if (mouseDown && selectedObject) {
+// //         if (inspectionMode) {
+// //             // Rotate object
+// //             selectedObject.rotation.y += event.movementX * 0.03;
+// //             selectedObject.rotation.x += event.movementY * 0.04;
+// //         } else {
+// //             if (selectedObject.name === 'robot') {
+// //                 selectedObject.position.x += event.movementX * 0.02;
+// //                 selectedObject.position.z -= event.movementY * 0.02; // Move robot along z-axis
+// //             } 
+// //             else {
+// //                 selectedObject.position.x += event.movementX * 0.02;
+// //                 selectedObject.position.y -= event.movementY * 0.02; // Move other objects along y-axis
+// //             }
+// //         }
+// //     }
+// // }
+
+// function onMouseUp(event) {
+//     mouseDown = false;
+//     selectedObject = null;
+// }
+
+
+// window.addEventListener('mousemove', onMouseMove, false);
+// window.addEventListener('mousedown', onMouseDown, false);
+// window.addEventListener('mousemove', onMouseDrag, false);
+// window.addEventListener('mouseup', onMouseUp, false);
+// window.addEventListener('keydown', onKeyDown, false);
+
+// LATEST ALGORITH FOR COLLISION DETECTION, DRAG AND ROTATION CONTROLS FOR THE OBJECT
+// let raycaster = new THREE.Raycaster();
+// let mouse = new THREE.Vector2();
+// let selectedObject = null;
+// let inspectionMode = false;
+// let originalPosition = new THREE.Vector3();
+// let mouseDown = false;
+
+// // check intersection for the object
+// function onMouseMove(event) {
+//     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+//     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+//     raycaster.setFromCamera(mouse, camera);
+
+//     let intersects = raycaster.intersectObjects(scene.children);
+    
+//     if (!mouseDown) {
+
+//         if (intersects.length > 0 && intersects[0].object.interactable) {
+//             selectedObject = intersects[0].object;
+//         } else {
+//             selectedObject = null;
+//         }
+//     }
+// }
+
+// // inspection mode enter and exit
+// let originalRotation = null;
+
+// function onKeyDown(event) {
+//     if (event.key === 'f') {
+//         inspectionMode = !inspectionMode;
+
+//         if (inspectionMode && selectedObject) {
+//             // Store original rotation
+//             originalRotation = selectedObject.rotation.clone();
+
+//             if(selectedObject.name === 'Object_2'){
+//                 selectedObject.position.set(-6, 6, 4);
+//             }
+//             // Move object closer to camera
+//             else{
+//                 selectedObject.position.set(0, 4, 6);
+//             }
+//             spotlight.position.set(0, 10, 25)
+            
+//         } else if (!inspectionMode && selectedObject) {
+//             // Restore original rotation
+//             if (originalRotation) {
+//                 selectedObject.rotation.copy(originalRotation);
+//                 originalRotation = null;
+//             }
+
+//             // Move object back and apply physics
+//             selectedObject.position.copy(originalPosition);
+//             console.log("selectedobject user data in inspection" + selectedObject.userData.physicsBody);
+//             let body = selectedObject.body;
+//             if (body) {
+//                 body.position.copy(selectedObject.position);
+//                 body.quaternion.copy(selectedObject.quaternion);
+//             }
+//             spotlight.position.set(0, 10, 10);
+//         }
+//     }
+// }
+
+// let previousMousePosition = { x: 0, y: 0 };
+
+// function onMouseDown(event) {
+//     mouseDown = true;
+//     previousMousePosition = {
+//         x: event.clientX,
+//         y: event.clientY
+//     };
+//     if (selectedObject && !inspectionMode) {
+//         // Store original position
+//         originalPosition.copy(selectedObject.position);
+//     }
+// }
+
+
+// function onMouseDrag(event) {
+//     if (mouseDown && selectedObject) {
+//         let deltaMove = {
+//             x: event.clientX - previousMousePosition.x,
+//             y: event.clientY - previousMousePosition.y
+//         };
+
+//         if (inspectionMode) {
+//             // Rotate object
+//             selectedObject.rotation.y += deltaMove.x * 0.01;
+//             selectedObject.rotation.x += deltaMove.y * 0.01;
+//         } else {
+//             // Move object
+//             let dragSpeed = 0.02; // Adjust this value to change the speed of dragging
+
+//             let dragOffset = new THREE.Vector3(
+//                 deltaMove.x * dragSpeed, 
+//                 -deltaMove.y * dragSpeed, 
+//                 0
+//             );
+//             dragOffset.applyQuaternion(camera.quaternion);
+
+//             selectedObject.position.add(dragOffset);
+        
+           
+//             // Update physics body position and rotation
+//             if (selectedObject.userData.physicsBody) {
+//                 console.log("selectedobject user data in drag " + selectedObject.userData.physicsBody);
+//                 selectedObject.userData.physicsBody.position.copy(selectedObject.position);
+//                 selectedObject.userData.physicsBody.quaternion.copy(selectedObject.quaternion);
+//             }
+//         }
+//         previousMousePosition = {
+//             x: event.clientX,
+//             y: event.clientY
+//         };
+//     }
+// }
+
+// function onMouseUp(event) {
+//     mouseDown = false;
+//     console.log("selected object "+ selectedObject.name);
+
+//     // Wake up the physics body
+//     if (selectedObject && selectedObject.userData.physicsBody) {
+//         selectedObject.userData.physicsBody.wakeUp();
+//     }
+
+//     selectedObject = null;
+// }
+
+// window.addEventListener('mousemove', onMouseMove, false);
+// window.addEventListener('mousedown', onMouseDown, false);
+// window.addEventListener('mousemove', onMouseDrag, false);
+// window.addEventListener('mouseup', onMouseUp, false);
+// window.addEventListener('keydown', onKeyDown, false);
+
+// }).catch(console.error);
