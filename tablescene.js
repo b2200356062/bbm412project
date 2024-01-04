@@ -170,80 +170,61 @@ Promise.all([
     //loadModel('reactor', 'nuclearreactor/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(3, 3, 3), new THREE.Euler(0, 0, 0), 6, true, true, true),
 
 ]).then(() => {
-    greenrock = objects['greenrock'].model;
-    greenrockBody = objects['greenrock'].body;
-    table = objects['table'].model;
-    tableBody = objects['table'].body;
-    bin = objects['bin'].model;
-    binBody = objects['bin'].body;
-    robot = objects['robot'].model;
-    robotBody = objects['robot'].body;
+    
     window.addEventListener('mousedown', (event) => {
         mouseDown = true;
-        if (selectedObject && selectedObject.userData.physicsBody) {
-            // Disable physics simulation for the selected object
-            selectedObject.userData.physicsBody.enabled = false;
+        if (selectedObject) {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
             if(raycaster.ray.intersectPlane(plane, intersection)){
-                // Calculate the offset between the mouse pointer and the object's position
                 offset.copy(intersection).sub(selectedObject.position);
             }
         }
     }, false);
     
-    let prevMouse = { x: 0, y: 0 };
     window.addEventListener('mousemove', (event) => {
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        // Check if the mouse position has changed significantly
-        if (Math.abs(mouse.x - prevMouse.x) > 0.01 || Math.abs(mouse.y - prevMouse.y) > 0.01) {
-            raycaster.setFromCamera(mouse, camera);
-            let intersects = raycaster.intersectObjects(scene.children);
-            if (intersects.length > 0 && intersects[0].object.interactable) {
-                let intersectedObject = intersects[0].object;
-                // Traverse up the parent objects until we find an object with a physics body
-                while (intersectedObject && !intersectedObject.userData.physicsBody) {
-                    intersectedObject = intersectedObject.parent;
-                }
-                selectedObject = intersectedObject;
-                if(mouseDown && selectedObject){
-                    if(raycaster.ray.intersectPlane(plane, intersection)){
-                        // Apply the offset when updating the object's position
-                        selectedObject.position.copy(intersection.sub(offset).multiplyScalar(1));
-                        // Check if the selected object has a physics body before trying to update it
-                        if (selectedObject.userData.physicsBody) {
-                            // Update the physics body's position
-                            selectedObject.userData.physicsBody.position.copy(selectedObject.position);
-                            // Stop the physics body's movement
-                            selectedObject.userData.physicsBody.setLinearVelocity(new THREE.Vector3(0, 0, 0));
-                            selectedObject.userData.physicsBody.setAngularVelocity(new THREE.Vector3(0, 0, 0));
-                        }
+        raycaster.setFromCamera(mouse, camera);
+        let intersects = raycaster.intersectObjects(scene.children);
+        if (intersects.length > 0 && intersects[0].object.interactable) {
+            let intersectedObject = intersects[0].object;
+            // Traverse up the parent objects until we find an object with a physics body
+            while (intersectedObject && !intersectedObject.userData.physicsBody) {
+                intersectedObject = intersectedObject.parent;
+            }
+            selectedObject = intersectedObject;
+            if(mouseDown && selectedObject){
+                if(raycaster.ray.intersectPlane(plane, intersection)){
+                    // Apply the offset when updating the object's position
+                    selectedObject.position.copy(intersection.sub(offset).multiplyScalar(1));
+                    // Check if the selected object has a physics body before trying to update it
+                    if (selectedObject.userData.physicsBody) {
+                        // Update the physics body's position
+                        selectedObject.userData.physicsBody.position.copy(selectedObject.position);
+                    } else {
+                        console.warn('Selected object does not have a physics body');
                     }
                 }
-                }
-            prevMouse.x = mouse.x;
-            prevMouse.y = mouse.y;
+            }
         }
     }, false);
-
     window.addEventListener('mouseup', (event) => {
         mouseDown = false;
         if (selectedObject && selectedObject.userData.physicsBody) {
-            // Enable physics body for the selected object
-            selectedObject.userData.physicsBody.enabled = true;
-            // Set the velocity of the physics body to make it fall down
-            selectedObject.userData.physicsBody.velocity.set(0, -10, 0);
+            // Restore the original mass of the object
+            selectedObject.userData.physicsBody.mass = originalMass;
+            selectedObject.userData.physicsBody.updateMassProperties();
         }
         selectedObject = null;
     }, false);
-
+    
     window.addEventListener('keydown', (event) => {
+    
         if(event.key === 'f'){
             inspectionMode = !inspectionMode;
             if(inspectionMode && selectedObject){
-                console.log("mode");
                 originalPosition.copy(selectedObject.position);
                 selectedObject.position.set(0, 0, 0);
             } else {
