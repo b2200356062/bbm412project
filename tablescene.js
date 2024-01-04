@@ -105,7 +105,7 @@ let objects = {};
 let table, lamp, greenrock, bin, robot;
 
 // load model function
-function loadModel(name, path, position, scale, rotation, mass, castShadow, recieveShadow) {
+function loadModel(name, path, position, scale, rotation, mass, castShadow, recieveShadow, interactable) {
     return new Promise((resolve, reject) => {        
         loader.load(path, function (gltf) {
             const model = gltf.scene;
@@ -113,6 +113,7 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
                 if (node instanceof THREE.Mesh) {
                     node.castShadow = castShadow;
                     node.receiveShadow = recieveShadow;
+                    node.interactable = interactable;
                 }
             });
             model.scale.set(scale.x, scale.y, scale.z);
@@ -160,12 +161,12 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
 }
 
 Promise.all([
-    loadModel('table', 'table/scene.gltf', new THREE.Vector3(0, -15, 10), new THREE.Vector3(0.05, 0.08, 0.08), new THREE.Euler(0,0,0), 0, true, true),
-    loadModel('lamp', 'oldlamp/scene.gltf', new THREE.Vector3(0, 25, 10), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, Math.PI/2,0), 0, false, false),
-    loadModel('greenrock', 'greenrock/scene.gltf', new THREE.Vector3(0, 3, 10), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 3, true, true),
-    loadModel('bin', 'cop/scene.gltf', new THREE.Vector3(17, -10, 17), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true),
-    loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true),
-    loadModel('reactor', 'nuclearreactor/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(3, 3, 3), new THREE.Euler(0, 0, 0), 6, true, true),
+    loadModel('table', 'table/scene.gltf', new THREE.Vector3(0, -15, 10), new THREE.Vector3(0.05, 0.08, 0.08), new THREE.Euler(0,0,0), 0, true, true, false),
+    loadModel('lamp', 'oldlamp/scene.gltf', new THREE.Vector3(0, 25, 10), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, Math.PI/2,0), 0, false, false, false),
+    loadModel('bin', 'cop/scene.gltf', new THREE.Vector3(17, -10, 17), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
+    loadModel('greenrock', 'greenrock/scene.gltf', new THREE.Vector3(0, 3, 10), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 3, true, true, true),
+    loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI/2, 0, 0), 5, true, true, true),
+    //loadModel('reactor', 'nuclearreactor/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(3, 3, 3), new THREE.Euler(0, 0, 0), 6, true, true, true),
 
 ]).then(() => {
 
@@ -420,6 +421,146 @@ window.addEventListener('keydown', (event) =>{
     }
     camera.lookAt(lookAtVector);
 });
+
+let raycaster = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
+let selectedObject = null;
+let inspectionMode = false;
+let originalPosition = new THREE.Vector3();
+let mouseDown = false;
+
+function onMouseMove(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    let intersects = raycaster.intersectObjects(scene.children);
+    
+    if (!mouseDown) {
+        if (intersects.length > 0 && intersects[0].object.interactable) {
+            selectedObject = intersects[0].object;
+        } else {
+            selectedObject = null;
+        }
+    }
+}
+let originalRotation = null;
+function onKeyDown(event) {
+    if (event.key === 'f') {
+        inspectionMode = !inspectionMode;
+
+        if (inspectionMode && selectedObject) {
+            // Store original rotation
+            originalRotation = selectedObject.rotation.clone();
+
+            if(selectedObject.name === 'Object_2'){
+                selectedObject.position.set(-6, 6, 4);
+            }
+            // Move object closer to camera
+            else{
+                selectedObject.position.set(0, 4, 6);
+            }
+            spotlight.position.set(0, 10, 25)
+            
+        } else if (!inspectionMode && selectedObject) {
+            // Restore original rotation
+            if (originalRotation) {
+                selectedObject.rotation.copy(originalRotation);
+                originalRotation = null;
+            }
+
+            // Move object back and apply physics
+            selectedObject.position.copy(originalPosition);
+            let body = selectedObject.userData.physicsBody;
+            if (body) {
+                body.position.copy(selectedObject.position);
+                body.quaternion.copy(selectedObject.quaternion);
+            }
+            spotlight.position.set(0, 10, 10);
+        }
+    }
+}
+
+function onMouseDown(event) {
+    mouseDown = true;
+    previousMousePosition = {
+        x: event.clientX,
+        y: event.clientY
+    };
+    if (selectedObject && !inspectionMode) {
+        // Store original position
+        originalPosition.copy(selectedObject.position);
+    }
+}
+
+let previousMousePosition = { x: 0, y: 0 };
+
+function onMouseDrag(event) {
+    if (mouseDown && selectedObject) {
+        let deltaMove = {
+            x: event.clientX - previousMousePosition.x,
+            y: event.clientY - previousMousePosition.y
+        };
+
+        if (inspectionMode) {
+            // Rotate object
+            selectedObject.rotation.y += deltaMove.x * 0.01;
+            selectedObject.rotation.x += deltaMove.y * 0.01;
+        } else {
+            // Move object
+            let dragSpeed = 0.01; // Adjust this value to change the speed of dragging
+
+            let dragOffset = new THREE.Vector3(
+                deltaMove.x * dragSpeed, 
+                -deltaMove.y * dragSpeed, 
+                0
+            );
+            dragOffset.applyQuaternion(camera.quaternion);
+
+            selectedObject.position.add(dragOffset);
+        }
+
+        previousMousePosition = {
+            x: event.clientX,
+            y: event.clientY
+        };
+    }
+}
+
+// function onMouseDrag(event) {
+//     if (mouseDown && selectedObject) {
+//         if (inspectionMode) {
+//             // Rotate object
+//             selectedObject.rotation.y += event.movementX * 0.03;
+//             selectedObject.rotation.x += event.movementY * 0.04;
+//         } else {
+//             if (selectedObject.name === 'robot') {
+//                 selectedObject.position.x += event.movementX * 0.02;
+//                 selectedObject.position.z -= event.movementY * 0.02; // Move robot along z-axis
+//             } 
+//             else {
+//                 selectedObject.position.x += event.movementX * 0.02;
+//                 selectedObject.position.y -= event.movementY * 0.02; // Move other objects along y-axis
+//             }
+//         }
+//     }
+// }
+
+function onMouseUp(event) {
+    mouseDown = false;
+    selectedObject = null;
+}
+
+
+window.addEventListener('mousemove', onMouseMove, false);
+window.addEventListener('mousedown', onMouseDown, false);
+window.addEventListener('mousemove', onMouseDrag, false);
+window.addEventListener('mouseup', onMouseUp, false);
+window.addEventListener('keydown', onKeyDown, false);
+
+
+
 
 function objectRecycled() {
 
