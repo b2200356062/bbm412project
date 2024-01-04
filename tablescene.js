@@ -187,6 +187,10 @@ Promise.all([
     let plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     let intersection = new THREE.Vector3();
     let offset = new THREE.Vector3();
+    let originalRotation = new THREE.Euler();
+    let lastMouseX = null; // Declare lastMouseX at a higher scope
+    let lastMouseY = null; // Declare lastMouseY at a higher scope
+    let rotateSpeed = 0.01; // Adjust the rotation speed as needed
 
     window.addEventListener('mousedown', (event) => {
         mouseDown = true;
@@ -205,9 +209,35 @@ Promise.all([
                 selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
             }
         }
+        lastMouseX = event.clientX; // Store the current mouse position
+        lastMouseY = event.clientY;
     }, false);
+    
     window.addEventListener('mousemove', (event) => {
-        if (mouseDown && selectedObject && selectedObject.userData.physicsBody) {
+        if (inspectionMode && selectedObject && mouseDown) {
+            console.log("inspection mode calısıo mu");
+            // Calculate the change in mouse position
+            let deltaX = event.clientX - lastMouseX;
+            let deltaY = event.clientY - lastMouseY;
+
+            // Get the current rotation of the physics body as Euler angles
+            let euler = new CANNON.Vec3();
+            selectedObject.userData.physicsBody.quaternion.toEuler(euler);
+
+            // Create a new quaternion from the updated Euler angles
+            let quaternion = new CANNON.Quaternion();
+            quaternion.setFromEuler(
+                euler.x + (deltaY * rotateSpeed),
+                euler.y + (deltaX * rotateSpeed),
+                euler.z
+            );
+            // Set the physics body's quaternion to the new quaternion
+            selectedObject.userData.physicsBody.quaternion.copy(quaternion);
+                // Store the current mouse position for the next mousemove event
+                lastMouseX = event.clientX;
+                lastMouseY = event.clientY;
+            }
+        else if (!inspectionMode && mouseDown && selectedObject && selectedObject.userData.physicsBody) {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
@@ -226,26 +256,30 @@ Promise.all([
             selectedObject = null;
         }
     }, false);
+
     window.addEventListener('keydown', (event) => {
         if(event.key === 'f'){
+            console.log("inspection mode");
             inspectionMode = !inspectionMode;
             if(inspectionMode && selectedObject){
+                console.log("hehe");
+                selectedObject.position.set(0, 10, 0);
                 originalPosition.copy(selectedObject.position);
-                selectedObject.position.set(0, 0, 0);
-            } else {
+                originalRotation.copy(selectedObject.rotation); // Store the original rotation
+            } else if (selectedObject) {
                 selectedObject.position.copy(originalPosition);
+                selectedObject.rotation.copy(originalRotation); // Restore the original rotation
             }
         }
-     }, false);
-
+    }, false);
 
      binBody.addEventListener("collide", function(event) {
-        let otherBody = event.body;
-        // Check if the body has already been added to the list
-        if (!bodiesToRemove.includes(otherBody)) {
-            // Add the body to the list of bodies to be removed
-            bodiesToRemove.push(otherBody);
-        }
+       let otherBody = event.body;
+    // Check if the body has already been added to the list
+    if (!bodiesToRemove.includes(otherBody)) {
+        // Add the body to the list of bodies to be removed
+        bodiesToRemove.push(otherBody);
+    }
     });
     
 }).catch(console.error);
