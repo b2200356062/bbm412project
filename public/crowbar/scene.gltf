@@ -1,0 +1,404 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 347,
+      "max": [
+        31.891809463500977,
+        583.73779296875,
+        228.83477783203125
+      ],
+      "min": [
+        -31.89180564880371,
+        -461.4833984375,
+        -49.69086456298828
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 4164,
+      "componentType": 5126,
+      "count": 347,
+      "max": [
+        1.0,
+        0.9998106956481934,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -0.994480550289154,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 347,
+      "max": [
+        1.0,
+        1.0,
+        0.9999146461486816,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 347,
+      "max": [
+        0.9631970524787903,
+        0.9691674113273621
+      ],
+      "min": [
+        -0.001187063753604889,
+        0.045209962874650955
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 810,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 8328,
+      "componentType": 5126,
+      "count": 36,
+      "max": [
+        28.055713653564453,
+        388.9423522949219,
+        50.000022888183594
+      ],
+      "min": [
+        -28.055713653564453,
+        -199.004150390625,
+        -4.38690185546875e-05
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 8760,
+      "componentType": 5126,
+      "count": 36,
+      "max": [
+        1.0,
+        3.3143490441034373e-07,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -3.574234881398297e-07,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "byteOffset": 5552,
+      "componentType": 5126,
+      "count": 36,
+      "max": [
+        0.70710688829422,
+        6.160126304166624e-06,
+        0.0,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -6.1601258494192734e-06,
+        -1.0,
+        1.0
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 2776,
+      "componentType": 5126,
+      "count": 36,
+      "max": [
+        0.2319292575120926,
+        0.9809814691543579
+      ],
+      "min": [
+        0.03753703832626343,
+        0.03342195227742195
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 3240,
+      "componentType": 5125,
+      "count": 60,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "Anthony Yanez (https://sketchfab.com/paulyanez)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/half-life-crowbar-1f075567411e42eb8af3942b5e061871",
+      "title": "Half-Life: Crowbar"
+    },
+    "generator": "Sketchfab-12.66.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 3480,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 3064,
+      "byteOffset": 3480,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 9192,
+      "byteOffset": 6544,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 6128,
+      "byteOffset": 15736,
+      "byteStride": 16,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 21864,
+      "uri": "scene.bin"
+    }
+  ],
+  "images": [
+    {
+      "uri": "textures/07_-_Default_baseColor.jpeg"
+    },
+    {
+      "uri": "textures/07_-_Default_normal.png"
+    },
+    {
+      "uri": "textures/08_-_Default_baseColor.jpeg"
+    },
+    {
+      "uri": "textures/08_-_Default_normal.png"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "07_-_Default",
+      "normalTexture": {
+        "index": 1
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "roughnessFactor": 0.7299923779999999
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "08_-_Default",
+      "normalTexture": {
+        "index": 3
+      },
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.3980564024,
+          0.3980564024,
+          0.3980564024,
+          1.0
+        ],
+        "baseColorTexture": {
+          "index": 2
+        },
+        "roughnessFactor": 0.8929713596
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Crowbar_07 - Default_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TANGENT": 2,
+            "TEXCOORD_0": 3
+          },
+          "indices": 4,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Crowbar_08 - Default_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 6,
+            "POSITION": 5,
+            "TANGENT": 7,
+            "TEXCOORD_0": 8
+          },
+          "indices": 9,
+          "material": 1,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        0.003284878441048966,
+        -0.0017712283921063059,
+        0.002064542377641198,
+        0.0,
+        0.00272021771900266,
+        0.0021388984637668034,
+        -0.0024930983331283847,
+        0.0,
+        0.0,
+        0.0032369545890977842,
+        0.0027770733207419527,
+        0.0,
+        47.82705307006836,
+        57.150741577148445,
+        -21.643812179565415,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Crowbar.FBX"
+    },
+    {
+      "children": [
+        3
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4,
+        5
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.9999999999999867,
+        1.6292069049406097e-07,
+        0.0,
+        0.0,
+        -1.1936330685827522e-07,
+        0.732646703720083,
+        0.0,
+        0.0,
+        0.0,
+        1.0818439477588981e-06,
+        1.0
+      ],
+      "name": "Crowbar"
+    },
+    {
+      "mesh": 0,
+      "name": "Crowbar_07 - Default_0"
+    },
+    {
+      "mesh": 1,
+      "name": "Crowbar_08 - Default_0"
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    },
+    {
+      "sampler": 0,
+      "source": 3
+    }
+  ]
+}

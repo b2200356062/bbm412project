@@ -43,16 +43,15 @@ div.style.color = 'white';
 div.style.padding = '40px';
 div.style.fontFamily = 'monospace'; 
 div.style.fontSize = '17px';
-
 var text = document.createTextNode('Drop the objects into their respective bins to recycle them and help space be a cleaner place!');
 var text1 = document.createTextNode('You can use arrow keys to change camera direction');
 var text2 = document.createTextNode('You can use mouse to move objects');
 var text3 = document.createTextNode('Press F to enter and exit the inspection mode');
 var text4 = document.createTextNode('In inspection mode you can use mouse to rotate the object');
 var text5 = document.createTextNode('You should put "" objects to "" bins, otherwise you will not get any points!');
+var text6 = document.createTextNode('Press T to hide/show the UI - Press H to hide/show the GUI for spotlight');
 var points = 0;
 var pointsText = document.createTextNode('Points: ' + points);
-
 div.appendChild(pointsText);
 var newline = document.createElement('div');
 newline.style.height = '20px'; // Adjust the height as needed
@@ -78,8 +77,24 @@ var newline = document.createElement('div');
 newline.style.height = '20px'; // Adjust the height as needed
 div.appendChild(newline);
 div.appendChild(text5);
-
+var newline = document.createElement('div');
+newline.style.height = '20px'; // Adjust the height as needed
+div.appendChild(newline);
+div.appendChild(text6);
 document.body.appendChild(div);
+let hud = true;
+window.addEventListener('keydown', (event) => {
+    if(event.key === 't'){
+        hud = !hud;
+        if(!hud){
+            document.body.removeChild(div);
+        }
+        if(hud){
+            document.body.appendChild(div);
+        }
+    }
+});
+
 
 // physics
 const world = new CANNON.World();
@@ -110,6 +125,12 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
     
             if (name === 'table') {
                 size.y *= 1.5;
+            }
+            if(name === 'reactor'){
+                size.y *= 0.10;
+            }
+            if(name === 'robot'){
+                size.y *= 0.7;
             }
 
             // Create a box shape for the model with the actual size of the model
@@ -143,7 +164,9 @@ Promise.all([
     loadModel('lamp', 'oldlamp/scene.gltf', new THREE.Vector3(0, 25, 10), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, Math.PI/2,0), 0, false, false),
     loadModel('greenrock', 'greenrock/scene.gltf', new THREE.Vector3(0, 3, 10), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 3, true, true),
     loadModel('bin', 'cop/scene.gltf', new THREE.Vector3(17, -10, 17), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true),
-    loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 0, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true)
+    loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true),
+    loadModel('reactor', 'nuclearreactor/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(3, 3, 3), new THREE.Euler(0, 0, 0), 6, true, true),
+
 ]).then(() => {
 
 }).catch(console.error);
@@ -216,7 +239,7 @@ textureLoader.load('floortext.jpg', function(texture) {
 // ceiling texture
 textureLoader.load('ceilingtext.png', function(texture) {
     // Create the geometry and material
-    var geometry = new THREE.PlaneGeometry(100, 50); // Adjust the size as needed
+    var geometry = new THREE.PlaneGeometry(80, 40); // Adjust the size as needed
     var material = new THREE.MeshStandardMaterial({ map: texture });
 
     var ceiling = new THREE.Mesh(geometry, material);
@@ -229,7 +252,7 @@ textureLoader.load('ceilingtext.png', function(texture) {
 const spotlight = new THREE.SpotLight(0xffff00, 250, 20, Math.PI / 4, 0.25, 1);
 spotlight.position.set(0, 10, 10);
 spotlight.target.position.set(0, 0, 10);
-spotlight.castShadow = true;
+//spotlight.castShadow = true;
 scene.add(spotlight);
 const spotlighthelper = new THREE.SpotLightHelper( spotlight );
 //scene.add( spotlighthelper );
