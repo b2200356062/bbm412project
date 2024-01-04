@@ -101,7 +101,9 @@ world.gravity.set(0, -9.82, 0); // m/s²
 
 const loader = new GLTFLoader();
 let objects = {};
+
 let table, lamp, greenrock, bin, robot;
+let tableBody, greenrockBody, binBody, robotBody;
 
 // load model function
 function loadModel(name, path, position, scale, rotation, mass, castShadow, recieveShadow, interactable) {
@@ -145,6 +147,7 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
             body.quaternion.setFromEuler(model.rotation.x, model.rotation.y, model.rotation.z);
 
             world.addBody(body);
+            model.userData.physicsBody = body;
             scene.add(model);
 
             // Add the model and its body to the objects object
@@ -167,6 +170,87 @@ Promise.all([
     //loadModel('reactor', 'nuclearreactor/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(3, 3, 3), new THREE.Euler(0, 0, 0), 6, true, true, true),
 
 ]).then(() => {
+    greenrock = objects['greenrock'].model;
+    greenrockBody = objects['greenrock'].body;
+    table = objects['table'].model;
+    tableBody = objects['table'].body;
+    bin = objects['bin'].model;
+    binBody = objects['bin'].body;
+    robot = objects['robot'].model;
+    robotBody = objects['robot'].body;
+    window.addEventListener('mousedown', (event) => {
+        mouseDown = true;
+        if (selectedObject && selectedObject.userData.physicsBody) {
+            // Disable physics simulation for the selected object
+            selectedObject.userData.physicsBody.enabled = false;
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            if(raycaster.ray.intersectPlane(plane, intersection)){
+                // Calculate the offset between the mouse pointer and the object's position
+                offset.copy(intersection).sub(selectedObject.position);
+            }
+        }
+    }, false);
+    
+    let prevMouse = { x: 0, y: 0 };
+    window.addEventListener('mousemove', (event) => {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        // Check if the mouse position has changed significantly
+        if (Math.abs(mouse.x - prevMouse.x) > 0.01 || Math.abs(mouse.y - prevMouse.y) > 0.01) {
+            raycaster.setFromCamera(mouse, camera);
+            let intersects = raycaster.intersectObjects(scene.children);
+            if (intersects.length > 0 && intersects[0].object.interactable) {
+                let intersectedObject = intersects[0].object;
+                // Traverse up the parent objects until we find an object with a physics body
+                while (intersectedObject && !intersectedObject.userData.physicsBody) {
+                    intersectedObject = intersectedObject.parent;
+                }
+                selectedObject = intersectedObject;
+                if(mouseDown && selectedObject){
+                    if(raycaster.ray.intersectPlane(plane, intersection)){
+                        // Apply the offset when updating the object's position
+                        selectedObject.position.copy(intersection.sub(offset).multiplyScalar(1));
+                        // Check if the selected object has a physics body before trying to update it
+                        if (selectedObject.userData.physicsBody) {
+                            // Update the physics body's position
+                            selectedObject.userData.physicsBody.position.copy(selectedObject.position);
+                            // Stop the physics body's movement
+                            selectedObject.userData.physicsBody.setLinearVelocity(new THREE.Vector3(0, 0, 0));
+                            selectedObject.userData.physicsBody.setAngularVelocity(new THREE.Vector3(0, 0, 0));
+                        }
+                    }
+                }
+                }
+            prevMouse.x = mouse.x;
+            prevMouse.y = mouse.y;
+        }
+    }, false);
+
+    window.addEventListener('mouseup', (event) => {
+        mouseDown = false;
+        if (selectedObject && selectedObject.userData.physicsBody) {
+            // Enable physics body for the selected object
+            selectedObject.userData.physicsBody.enabled = true;
+            // Set the velocity of the physics body to make it fall down
+            selectedObject.userData.physicsBody.velocity.set(0, -10, 0);
+        }
+        selectedObject = null;
+    }, false);
+
+    window.addEventListener('keydown', (event) => {
+        if(event.key === 'f'){
+            inspectionMode = !inspectionMode;
+            if(inspectionMode && selectedObject){
+                console.log("mode");
+                originalPosition.copy(selectedObject.position);
+                selectedObject.position.set(0, 0, 0);
+            } else {
+                selectedObject.position.copy(originalPosition);
+            }
+        }
+     }, false);
     
 }).catch(console.error);
 
@@ -255,7 +339,7 @@ spotlight.target.position.set(0, 0, 10);
 //spotlight.castShadow = true;
 scene.add(spotlight);
 const spotlighthelper = new THREE.SpotLightHelper( spotlight );
-scene.add( spotlighthelper );
+//scene.add( spotlighthelper );
 
 // ambient light
 const ambientlight = new THREE.AmbientLight(0xffffff, 2);
@@ -376,13 +460,13 @@ window.addEventListener('keydown', (event) =>{
             camera.position.x += 5;
             break;
         case 'KeyW':
-            if(camera.position.z < -50){
+            if(camera.position.z < -25){
                 break;
             }
             camera.position.z -= 5;
             break;
         case 'KeyS':
-            if(camera.position.z > 50){
+            if(camera.position.z > 25){
                 break;
             }
             camera.position.z += 5;
@@ -441,48 +525,12 @@ let selectedObject = null;
 let inspectionMode = false;
 let originalPosition = new THREE.Vector3();
 let mouseDown = false;
-
-window.addEventListener('mousemove', (event) => {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-
-    let intersects = raycaster.intersectObjects(scene.children);
-    
-    if (intersects.length > 0 && intersects[0].object.interactable) {
-        selectedObject = intersects[0].object;
-    }
-},false);
+let mousePosition = new THREE.Vector2();
+let plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+let intersection = new THREE.Vector3();
+let offset = new THREE.Vector3();
 
 
-window.addEventListener('mousedown', (event) => {
-    mouseDown = true;
-
-    if (selectedObject) {
-        console.log("evet");
-    }
-
-}, false);
-
-window.addEventListener('mouseup', (event) => {
-
-}, false);
-
-window.addEventListener('keydown', (event) => {
-
-    if(event.key === 'f'){
-        inspectionMode = !inspectionMode;
-        if(inspectionMode){
-            console.log("mode");
-            originalPosition.copy(selectedObject.position);
-            selectedObject.position.set(0, 0, 0);
-        } else {
-            
-            selectedObject.position.copy(originalPosition);
-        }
-    }
- }, false);
 
 
 function objectRecycled() {
