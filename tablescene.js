@@ -18,8 +18,8 @@ const HEIGHT = window.innerHeight;
 const canvas = document.querySelector('#canvas');
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 60 , WIDTH / HEIGHT, 0.1, 100);
-
 camera.position.set(0, 5, 30);
+
 // renders in canvas
 const renderer = new THREE.WebGLRenderer({canvas: canvas, powerPreference: "high-performance"});
 
@@ -172,25 +172,22 @@ Promise.all([
     loadModel('greenrock', 'greenrock/scene.gltf', new THREE.Vector3(0, 3, 10), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 3, true, true, true),
     loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI/2, 0, 0), 5, true, true, true),
     //loadModel('reactor', 'nuclearreactor/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(3, 3, 3), new THREE.Euler(0, 0, 0), 6, true, true, true),
-
 ]).then(() => {
 
     let binBody = objects['bin'].body;
-    let originalMass;
     let raycaster = new THREE.Raycaster();
     let mouse = new THREE.Vector2();
     let selectedObject = null;
     let inspectionMode = false;
     let originalPosition = new THREE.Vector3();
     let mouseDown = false;
-    let mousePosition = new THREE.Vector2();
     let plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     let intersection = new THREE.Vector3();
     let offset = new THREE.Vector3();
     let originalRotation = new THREE.Euler();
-    let lastMouseX = null; // Declare lastMouseX at a higher scope
-    let lastMouseY = null; // Declare lastMouseY at a higher scope
-    let rotateSpeed = 0.01; // Adjust the rotation speed as needed
+    let lastMouseX = null;
+    let lastMouseY = null; 
+    let rotateSpeed = 0.01; 
 
     window.addEventListener('mousedown', (event) => {
         mouseDown = true;
@@ -230,25 +227,26 @@ Promise.all([
         if (inspectionMode && selectedObject && mouseDown) {
             // Calculate the change in mouse position
            // Calculate the change in mouse position
-let deltaX = -(event.clientX - lastMouseX); // Negate the change in x-coordinate
-let deltaY = -(event.clientY - lastMouseY); // Negate the change in y-coordinate
+        let deltaX = -(event.clientX - lastMouseX); // Negate the change in x-coordinate
+        let deltaY = -(event.clientY - lastMouseY); // Negate the change in y-coordinate
 
-// Create a quaternion representing the rotation around the Y axis
-let quaternionY = new CANNON.Quaternion();
-quaternionY.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), deltaX * rotateSpeed);
+        // Create a quaternion representing the rotation around the Y axis
+        let quaternionY = new CANNON.Quaternion();
+        quaternionY.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), deltaX * rotateSpeed);
 
-// Create a quaternion representing the rotation around the X axis
-let quaternionX = new CANNON.Quaternion();
-quaternionX.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), deltaY * rotateSpeed);
+        // Create a quaternion representing the rotation around the X axis
+        let quaternionX = new CANNON.Quaternion();
+        quaternionX.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), deltaY * rotateSpeed);
 
-// Multiply the current quaternion of the physics body with the new quaternions
-selectedObject.userData.physicsBody.quaternion.mult(quaternionY, selectedObject.userData.physicsBody.quaternion);
-selectedObject.userData.physicsBody.quaternion.mult(quaternionX, selectedObject.userData.physicsBody.quaternion);
+        // Multiply the current quaternion of the physics body with the new quaternions
+        selectedObject.userData.physicsBody.quaternion.mult(quaternionY, selectedObject.userData.physicsBody.quaternion);
+        selectedObject.userData.physicsBody.quaternion.mult(quaternionX, selectedObject.userData.physicsBody.quaternion);
     
-            // Store the current mouse position for the next mousemove event
-            lastMouseX = event.clientX;
-            lastMouseY = event.clientY;
+        // Store the current mouse position for the next mousemove event
+        lastMouseX = event.clientX;
+        lastMouseY = event.clientY;
         }
+
         else if (!inspectionMode && mouseDown && selectedObject && selectedObject.userData.physicsBody) {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -261,6 +259,7 @@ selectedObject.userData.physicsBody.quaternion.mult(quaternionX, selectedObject.
             }
         }
     }, false);
+
     window.addEventListener('mouseup', (event) => {
         mouseDown = false;
         if (!inspectionMode && selectedObject && selectedObject.userData.physicsBody) {
@@ -481,10 +480,10 @@ gui.add(parameters, 'Spotlight Switch')
         spotlight.target.updateMatrixWorld();
     }
 
+// keyboard and arrow keys camera
 let lookAtVector = new THREE.Vector3(0, 0, -1);
 camera.lookAt(lookAtVector);
 
-// keyboard camera for debugging
 window.addEventListener('keydown', (event) =>{
     switch (event.code){
         case 'KeyA':
@@ -512,19 +511,18 @@ window.addEventListener('keydown', (event) =>{
             camera.position.z += 5;
             break;
         case 'KeyQ':
-            if(camera.position.y > 25){
+            if(camera.position.y > 10){
                 break;
             }
             camera.position.y += 5;
             break;
         case 'KeyE':
-            if(camera.position.y < -25){
+            if(camera.position.y < -10){
                 break;
             }
             camera.position.y -= 5;
             break;
         case 'ArrowUp':
-            // Tilt the camera up
             if(lookAtVector.y > 25){
                 break;
             }
@@ -532,7 +530,6 @@ window.addEventListener('keydown', (event) =>{
             event.preventDefault();
             break;
         case 'ArrowDown':
-            // Tilt the camera down
             if(lookAtVector.y < -25){
                 break;
             }
@@ -540,7 +537,6 @@ window.addEventListener('keydown', (event) =>{
             event.preventDefault();
             break;
         case 'ArrowLeft':
-            // Rotate the camera to the left
             if(lookAtVector.x < -25){
                 break;
             }
@@ -548,7 +544,6 @@ window.addEventListener('keydown', (event) =>{
             event.preventDefault();
             break;
         case 'ArrowRight':
-            // Rotate the camera to the right
             if(lookAtVector.x > 25){
                 break;
             }
@@ -614,7 +609,6 @@ function update(){
                 scene.remove(model);
             }
             world.removeBody(body);
-            // Call the objectRecycled function
             objectRecycled();
         }
     }
