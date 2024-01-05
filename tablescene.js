@@ -211,32 +211,44 @@ Promise.all([
         }
         lastMouseX = event.clientX; // Store the current mouse position
         lastMouseY = event.clientY;
+        if (inspectionMode && selectedObject) {
+            console.log("hehe");
+            // Store the original position and rotation
+            originalPosition.copy(selectedObject.position);
+            originalRotation.copy(selectedObject.rotation);
+    
+            // Move the selected object to the center of the screen and a little bit closer to the camera
+            selectedObject.position.set(0, 5, 10);
+            selectedObject.userData.physicsBody.position.copy(selectedObject.position); // Update the physics body's position
+    
+            // Disable physics
+            selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
+        }
     }, false);
     
     window.addEventListener('mousemove', (event) => {
         if (inspectionMode && selectedObject && mouseDown) {
-            console.log("inspection mode calısıo mu");
             // Calculate the change in mouse position
-            let deltaX = event.clientX - lastMouseX;
-            let deltaY = event.clientY - lastMouseY;
+           // Calculate the change in mouse position
+let deltaX = -(event.clientX - lastMouseX); // Negate the change in x-coordinate
+let deltaY = -(event.clientY - lastMouseY); // Negate the change in y-coordinate
 
-            // Get the current rotation of the physics body as Euler angles
-            let euler = new CANNON.Vec3();
-            selectedObject.userData.physicsBody.quaternion.toEuler(euler);
+// Create a quaternion representing the rotation around the Y axis
+let quaternionY = new CANNON.Quaternion();
+quaternionY.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), deltaX * rotateSpeed);
 
-            // Create a new quaternion from the updated Euler angles
-            let quaternion = new CANNON.Quaternion();
-            quaternion.setFromEuler(
-                euler.x + (deltaY * rotateSpeed),
-                euler.y + (deltaX * rotateSpeed),
-                euler.z
-            );
-            // Set the physics body's quaternion to the new quaternion
-            selectedObject.userData.physicsBody.quaternion.copy(quaternion);
-                // Store the current mouse position for the next mousemove event
-                lastMouseX = event.clientX;
-                lastMouseY = event.clientY;
-            }
+// Create a quaternion representing the rotation around the X axis
+let quaternionX = new CANNON.Quaternion();
+quaternionX.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), deltaY * rotateSpeed);
+
+// Multiply the current quaternion of the physics body with the new quaternions
+selectedObject.userData.physicsBody.quaternion.mult(quaternionY, selectedObject.userData.physicsBody.quaternion);
+selectedObject.userData.physicsBody.quaternion.mult(quaternionX, selectedObject.userData.physicsBody.quaternion);
+    
+            // Store the current mouse position for the next mousemove event
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
+        }
         else if (!inspectionMode && mouseDown && selectedObject && selectedObject.userData.physicsBody) {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -251,7 +263,7 @@ Promise.all([
     }, false);
     window.addEventListener('mouseup', (event) => {
         mouseDown = false;
-        if (selectedObject && selectedObject.userData.physicsBody) {
+        if (!inspectionMode && selectedObject && selectedObject.userData.physicsBody) {
             selectedObject.userData.physicsBody.type = CANNON.Body.DYNAMIC;
             selectedObject = null;
         }
@@ -259,16 +271,14 @@ Promise.all([
 
     window.addEventListener('keydown', (event) => {
         if(event.key === 'f'){
-            console.log("inspection mode");
             inspectionMode = !inspectionMode;
-            if(inspectionMode && selectedObject){
-                console.log("hehe");
-                selectedObject.position.set(0, 10, 0);
-                originalPosition.copy(selectedObject.position);
-                originalRotation.copy(selectedObject.rotation); // Store the original rotation
-            } else if (selectedObject) {
+            if (!inspectionMode && selectedObject) {
+                // Restore the original position and rotation
                 selectedObject.position.copy(originalPosition);
-                selectedObject.rotation.copy(originalRotation); // Restore the original rotation
+                selectedObject.rotation.copy(originalRotation);
+    
+                // Enable physics
+                selectedObject.userData.physicsBody.type = CANNON.Body.DYNAMIC;
             }
         }
     }, false);
