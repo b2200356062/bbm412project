@@ -46,7 +46,7 @@ div.style.fontSize = '17px';
 var text = document.createTextNode('Drop the objects into their respective bins to recycle them and help space be a cleaner place!');
 var text1 = document.createTextNode('You can use arrow keys to change camera direction');
 var text2 = document.createTextNode('You can use mouse to move objects');
-var text3 = document.createTextNode('Press F to enter and exit the inspection mode');
+var text3 = document.createTextNode('Press F and click on the object you want inspect');
 var text4 = document.createTextNode('In inspection mode you can use mouse to rotate the object');
 var text5 = document.createTextNode('You should put "" objects to "" bins, otherwise you will not get any points!');
 var text6 = document.createTextNode('Press T to hide/show the UI - Press H to hide/show the GUI for spotlight');
@@ -173,7 +173,8 @@ Promise.all([
     loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI/2, 0, 0), 5, true, true, true),
     //loadModel('reactor', 'nuclearreactor/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(3, 3, 3), new THREE.Euler(0, 0, 0), 6, true, true, true),
 ]).then(() => {
-
+    
+    // algorithms for intersection deetection, physics and inspection mode
     let binBody = objects['bin'].body;
     let raycaster = new THREE.Raycaster();
     let mouse = new THREE.Vector2();
@@ -206,16 +207,15 @@ Promise.all([
                 selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
             }
         }
-        lastMouseX = event.clientX; // Store the current mouse position
+        lastMouseX = event.clientX;
         lastMouseY = event.clientY;
         if (inspectionMode && selectedObject) {
-            console.log("hehe");
             // Store the original position and rotation
             originalPosition.copy(selectedObject.position);
             originalRotation.copy(selectedObject.rotation);
     
             // Move the selected object to the center of the screen and a little bit closer to the camera
-            selectedObject.position.set(0, 5, 10);
+            selectedObject.position.set(0, 5, 13);
             selectedObject.userData.physicsBody.position.copy(selectedObject.position); // Update the physics body's position
     
             // Disable physics
@@ -227,8 +227,8 @@ Promise.all([
         if (inspectionMode && selectedObject && mouseDown) {
             // Calculate the change in mouse position
            // Calculate the change in mouse position
-        let deltaX = -(event.clientX - lastMouseX); // Negate the change in x-coordinate
-        let deltaY = -(event.clientY - lastMouseY); // Negate the change in y-coordinate
+        let deltaX = (event.clientX - lastMouseX); // Negate the change in x-coordinate
+        let deltaY = (event.clientY - lastMouseY); // Negate the change in y-coordinate
 
         // Create a quaternion representing the rotation around the Y axis
         let quaternionY = new CANNON.Quaternion();
