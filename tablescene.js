@@ -8,7 +8,8 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { BrightnessContrastShader } from 'three/examples/jsm/shaders/BrightnessContrastShader.js';
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
-
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 export default function tableScene(){
 
 const WIDTH = window.innerWidth;
@@ -29,6 +30,26 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setClearColor(0x000000, 1); // arkaplan rengi
+
+// Load the font
+let fontloader = new FontLoader();
+fontloader.load('ui/font.json', function(font) {
+    // Create a geometry for the text
+    let geometry = new TextGeometry('Bin', {
+        font: font,
+        size: 0.8, // Size of the text
+        height: 0.1, // Thickness of the text
+    });
+    let material = new THREE.MeshBasicMaterial({color: 0xffffff}); // White color
+    let textMesh = new THREE.Mesh(geometry, material);
+    textMesh.position.set(15, -3, 18);
+    textMesh.rotation.set(0, -Math.PI/3, 0);
+    scene.add(textMesh);
+    let textMesh2 = new THREE.Mesh(geometry, material);
+    textMesh2.position.set(-17, -3, 20);
+    textMesh2.rotation.set(0, Math.PI/3, 0);
+    scene.add(textMesh2);
+});
 
 // UI
 var div = document.createElement('div');
@@ -95,6 +116,27 @@ window.addEventListener('keydown', (event) => {
     }
 });
 
+var div2 = document.createElement('div');
+div2.style.position = 'absolute';
+div2.style.top = '400px';
+div2.style.left = '1250px';
+div2.style.width = '420px'; 
+div2.style.height = '400px'; 
+div2.style.backgroundImage = 'url(ui/card2/card2.png)';
+div2.style.backgroundSize = 'cover'; 
+div2.style.color = 'white'; 
+div2.style.padding = '50px';
+div2.style.fontFamily = 'monospace'; 
+div2.style.fontSize = '22px';
+var textitem1 = document.createTextNode('Info about item 1...');
+// 70 74 77 objelerin id'si
+var textitem2 = document.createTextNode('Info about item 2...');
+var textitem3 = document.createTextNode('Info about item 3...');
+var textitem4 = document.createTextNode('Info about item 4...');
+div2.appendChild(textitem1);
+document.body.appendChild(div2);
+div2.style.display = 'none';
+
 // physics
 const world = new CANNON.World();
 world.gravity.set(0, -9.82, 0); // m/s²
@@ -115,6 +157,9 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
                     node.castShadow = castShadow;
                     node.receiveShadow = recieveShadow;
                     node.interactable = interactable;
+                    // if(name === 'bin'){
+                    //     node.material.color.set(0x82CAFF);
+                    // }
                 }
             });
             model.scale.set(scale.x, scale.y, scale.z);
@@ -139,6 +184,14 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
                 size.y *= 0.5;
                 size.x *= 0.75;
             }
+            if(name === 'heater'){
+                size.y *= 0.15;
+            }
+            // if(name === 'charger'){
+            //     size.z *= 1.5;
+            //     size.y *= 0.5;
+            //     size.x *= 0.5;
+            // }
             // Create a box shape for the model with the actual size of the model
             const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
 
@@ -169,13 +222,17 @@ Promise.all([
     loadModel('table', 'table/scene.gltf', new THREE.Vector3(0, -15, 10), new THREE.Vector3(0.05, 0.08, 0.08), new THREE.Euler(0,0,0), 0, true, true, false),
     loadModel('lamp', 'oldlamp/scene.gltf', new THREE.Vector3(0, 25, 10), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, Math.PI/2,0), 0, false, false, false),
     loadModel('bin', 'cop/scene.gltf', new THREE.Vector3(17, -10, 17), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
-    loadModel('greenrock', 'greenrock/scene.gltf', new THREE.Vector3(0, 3, 10), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 3, true, true, true),
+    loadModel('bin2', 'cop/scene.gltf', new THREE.Vector3(-17, -10, 17), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
+    loadModel('greenrock', 'greenrock/scene.gltf', new THREE.Vector3(0, 3, 12), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 3, true, true, true),
     loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI/2, 0, 0), 5, true, true, true),
+    loadModel('heater', 'heater/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true, true),
+    //loadModel('charger', 'turbocharger/scene.gltf', new THREE.Vector3(2, 3, 7), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(Math.PI/2, 0, 0), 5, true, true, true),
     //loadModel('reactor', 'nuclearreactor/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(3, 3, 3), new THREE.Euler(0, 0, 0), 6, true, true, true),
 ]).then(() => {
-    
+
     // algorithms for intersection deetection, physics and inspection mode
     let binBody = objects['bin'].body;
+    let binBody2 = objects['bin2'].body;
     let raycaster = new THREE.Raycaster();
     let mouse = new THREE.Vector2();
     let selectedObject = null;
@@ -208,23 +265,37 @@ Promise.all([
                 offset.copy(intersection).sub(selectedObject.position);
                 selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
             }
+            console.log(selectedObject.id);
         }
 
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
 
         if (inspectionMode && selectedObject) {
+                // Show the popup and update the text
+            div2.style.display = 'block';
+            if(selectedObject.id === 70){
+                textitem1.nodeValue = 'Info about item 1...';
+            }
+            if(selectedObject.id === 74){
+                textitem1.nodeValue = 'Info about item 2...';
+            }
+            if(selectedObject.id === 77){
+                textitem1.nodeValue = 'Info about item 3...';
+            }
             // Store the original position and rotation
             originalPosition.copy(selectedObject.position);
             originalRotation.copy(selectedObject.rotation);
     
             // Move the selected object to the center of the screen and a little bit closer to the camera
-            selectedObject.position.set(0, 5, 13);
+            selectedObject.position.set(0, 5, 15);
             selectedObject.userData.physicsBody.position.copy(selectedObject.position); // Update the physics body's position
     
             // Disable physics
             selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
         }
+
+
     }, false);
     
     window.addEventListener('mousemove', (event) => {
@@ -249,11 +320,8 @@ Promise.all([
         // Store the current mouse position for the next mousemove event
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
-
         }
-
         else if (!inspectionMode && mouseDown && selectedObject && selectedObject.userData.physicsBody) {
-            
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
@@ -278,25 +346,36 @@ Promise.all([
     window.addEventListener('keydown', (event) => {
         if(event.key === 'f'){
             inspectionMode = !inspectionMode;
+
             if (!inspectionMode && selectedObject) {
                 // Restore the original position and rotation
                 selectedObject.position.copy(originalPosition);
                 selectedObject.rotation.copy(originalRotation);
-    
                 // Enable physics
                 selectedObject.userData.physicsBody.type = CANNON.Body.DYNAMIC;
+                div2.style.display = 'none';
             }
+
         }
     }, false);
 
-     binBody.addEventListener("collide", function(event) {
+    binBody.addEventListener("collide", function(event) {
        let otherBody = event.body;
-    // Check if the body has already been added to the list
-    if (!bodiesToRemove.includes(otherBody)) {
-        // Add the body to the list of bodies to be removed
-        bodiesToRemove.push(otherBody);
-    }
+        // Check if the body has already been added to the list
+        if (!bodiesToRemove.includes(otherBody)) {
+            // Add the body to the list of bodies to be removed
+            bodiesToRemove.push(otherBody);
+        }
     });
+
+    binBody2.addEventListener("collide", function(event) {
+        let otherBody = event.body;
+         // Check if the body has already been added to the list
+         if (!bodiesToRemove.includes(otherBody)) {
+             // Add the body to the list of bodies to be removed
+             bodiesToRemove.push(otherBody);
+         }
+     });
     
 }).catch(console.error);
 

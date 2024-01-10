@@ -1,0 +1,11 @@
+Model Information:
+* title:	Sci-fi turbocharger
+* source:	https://sketchfab.com/3d-models/sci-fi-turbocharger-071da6d19c7541d7b3a87c3bc12085ca
+* author:	Nokken (https://sketchfab.com/nokken)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Sci-fi turbocharger" (https://sketchfab.com/3d-models/sci-fi-turbocharger-071da6d19c7541d7b3a87c3bc12085ca) by Nokken (https://sketchfab.com/nokken) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
