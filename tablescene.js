@@ -195,7 +195,9 @@ Promise.all([
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
+
         let intersects = raycaster.intersectObjects(scene.children);
+
         if (intersects.length > 0 && intersects[0].object.interactable) {
             let intersectedObject = intersects[0].object;
             while (intersectedObject && !intersectedObject.userData.physicsBody) {
@@ -207,8 +209,10 @@ Promise.all([
                 selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
             }
         }
+
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
+
         if (inspectionMode && selectedObject) {
             // Store the original position and rotation
             originalPosition.copy(selectedObject.position);
@@ -245,12 +249,15 @@ Promise.all([
         // Store the current mouse position for the next mousemove event
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
+
         }
 
         else if (!inspectionMode && mouseDown && selectedObject && selectedObject.userData.physicsBody) {
+            
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
+            
             if(raycaster.ray.intersectPlane(plane, intersection)){
                 let direction = raycaster.ray.direction.clone().multiplyScalar(22);
                 let newPosition = new THREE.Vector3().addVectors(camera.position, direction);
