@@ -10,6 +10,7 @@ import { BrightnessContrastShader } from 'three/examples/jsm/shaders/BrightnessC
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
 export default function tableScene(){
 
 const WIDTH = window.innerWidth;
@@ -18,7 +19,7 @@ const HEIGHT = window.innerHeight;
 // canvas 
 const canvas = document.querySelector('#canvas');
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 60 , WIDTH / HEIGHT, 0.1, 100);
+const camera = new THREE.PerspectiveCamera( 60 , WIDTH / HEIGHT, 0.01, 200);
 camera.position.set(0, 5, 30);
 
 // renders in canvas
@@ -75,31 +76,31 @@ var points = 0;
 var pointsText = document.createTextNode('Points: ' + points);
 div.appendChild(pointsText);
 var newline = document.createElement('div');
-newline.style.height = '20px'; // Adjust the height as needed
+newline.style.height = '20px'; 
 div.appendChild(newline);
 div.appendChild(text);
 var newline = document.createElement('div');
-newline.style.height = '20px'; // Adjust the height as needed
+newline.style.height = '20px'; 
 div.appendChild(newline);
 div.appendChild(text1);
 var newline = document.createElement('div');
-newline.style.height = '20px'; // Adjust the height as needed
+newline.style.height = '20px'; 
 div.appendChild(newline);
 div.appendChild(text2);
 var newline = document.createElement('div');
-newline.style.height = '20px'; // Adjust the height as needed
+newline.style.height = '20px'; 
 div.appendChild(newline);
 div.appendChild(text3);
 var newline = document.createElement('div');
-newline.style.height = '20px'; // Adjust the height as needed
+newline.style.height = '20px'; 
 div.appendChild(newline);
 div.appendChild(text4);
 var newline = document.createElement('div');
-newline.style.height = '20px'; // Adjust the height as needed
+newline.style.height = '20px'; 
 div.appendChild(newline);
 div.appendChild(text5);
 var newline = document.createElement('div');
-newline.style.height = '20px'; // Adjust the height as needed
+newline.style.height = '20px'; 
 div.appendChild(newline);
 div.appendChild(text6);
 document.body.appendChild(div);
@@ -116,6 +117,7 @@ window.addEventListener('keydown', (event) => {
     }
 });
 
+// UI for inspection mode
 var div2 = document.createElement('div');
 div2.style.position = 'absolute';
 div2.style.top = '400px';
@@ -145,18 +147,16 @@ const loader = new GLTFLoader();
 let objects = {};
 let bodiesToRemove = [];
 
+// making the scene a little bit darker
 var composer = new EffectComposer(renderer);
-// Add a RenderPass
 composer.addPass(new RenderPass(scene, camera));
-
-// Add a Brightness/Contrast pass
 var brightnessContrastPass = new ShaderPass(BrightnessContrastShader);
 brightnessContrastPass.uniforms['brightness'].value = 0 // Reduce brightness
 brightnessContrastPass.uniforms['contrast'].value = 0 // Reduce contrast
 composer.addPass(brightnessContrastPass);
 
 // adding a depth of field effect for the inspection mode.
-let focusObjectPosition = new THREE.Vector3(0, 5, 20);
+let focusObjectPosition = new THREE.Vector3(0, 9, 0);
 let focusDistance = camera.position.distanceTo(focusObjectPosition);
 let bokehPass = new BokehPass(scene, camera, {
     focus: focusDistance,
@@ -178,9 +178,6 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
                     node.castShadow = castShadow;
                     node.receiveShadow = recieveShadow;
                     node.interactable = interactable;
-                    // if(name === 'bin'){
-                    //     node.material.color.set(0x82CAFF);
-                    // }
                 }
             });
             model.scale.set(scale.x, scale.y, scale.z);
@@ -211,6 +208,7 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
             //     size.y *= 0.5;
             //     size.x *= 0.5;
             // }
+
             // Create a box shape for the model with the actual size of the model
             const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
 
@@ -244,9 +242,6 @@ Promise.all([
     loadModel('bin2', 'cop/scene.gltf', new THREE.Vector3(-17, -10, 17), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
     loadModel('greenrock', 'greenrock/scene.gltf', new THREE.Vector3(0, 3, 12), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 3, true, true, true),
     loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI/2, 0, 0), 5, true, true, true),
-    //loadModel('heater', 'heater/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true, true),
-    //loadModel('charger', 'turbocharger/scene.gltf', new THREE.Vector3(2, 3, 7), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(Math.PI/2, 0, 0), 5, true, true, true),
-    //loadModel('reactor', 'nuclearreactor/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(3, 3, 3), new THREE.Euler(0, 0, 0), 6, true, true, true),
     loadModel('box', 'electricbox/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 5, true, true, true),
     loadModel('fan', 'electricfan/scene.gltf', new THREE.Vector3(-5, 3, 15), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true, true),
     loadModel('sailormoon', 'sailormoon/scene.gltf', new THREE.Vector3(5, 3, 15), new THREE.Vector3(20, 20, 20), new THREE.Euler(0, 0, 0), 5, true, true, true),
@@ -254,7 +249,7 @@ Promise.all([
     
 ]).then(() => {
 
-    // algorithms for intersection deetection, physics and inspection modef
+    // algorithms for intersection detection, physics and inspection mode
     let binBody = objects['bin'].body;
     let binBody2 = objects['bin2'].body;
     let raycaster = new THREE.Raycaster();
@@ -271,6 +266,7 @@ Promise.all([
     let lastMouseY = null; 
     let rotateSpeed = 0.01; 
 
+    // raycaster to detect object with the mouse
     window.addEventListener('mousedown', (event) => {
         mouseDown = true;
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -290,11 +286,12 @@ Promise.all([
                 selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
             }
         }
+
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
 
+        // if in inspection mode, UI pops up and objects position is updated
         if (inspectionMode && selectedObject) {
-                // Show the popup and update the text
             div2.style.display = 'block';
             if(selectedObject.id === 70){
                 textitem1.nodeValue = 'Info about item 1...';
@@ -315,7 +312,7 @@ Promise.all([
     
             // Disable physics
             selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
-            
+            // enables the depth of field effect
             bokehPass.enabled = true;
         }
 
@@ -323,6 +320,8 @@ Promise.all([
     }, false);
     
     window.addEventListener('mousemove', (event) => {
+
+        // if in inspection mode, rotate the object.
         if (inspectionMode && selectedObject && mouseDown) {
 
         let deltaX = (event.clientX - lastMouseX);
@@ -344,7 +343,7 @@ Promise.all([
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
         }
-        
+        // if not in inspection mode, move the object
         else if (!inspectionMode && mouseDown && selectedObject && selectedObject.userData.physicsBody) {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -367,6 +366,7 @@ Promise.all([
         }
     }, false);
 
+    // enters inspection mode with f or F
     window.addEventListener('keydown', (event) => {
         if(event.key === 'f' || event.key === 'F'){
             inspectionMode = !inspectionMode;
@@ -410,6 +410,7 @@ Promise.all([
         }
     }, false);
 
+    // collision detection for the objects and the bins
     binBody.addEventListener("collide", function(event) {
        let otherBody = event.body;
         // Check if the body has already been added to the list
@@ -436,22 +437,20 @@ var textureLoader = new THREE.TextureLoader().setPath('textures/');
 // front wall
 textureLoader.load('texttable.png', function(texture) {
     // Create the geometry and material
-    var geometry = new THREE.PlaneGeometry(100, 50); // Adjust the size as needed
+
+    var geometry = new THREE.PlaneGeometry(100, 50);
     var material = new THREE.MeshStandardMaterial({ map: texture });
 
-    // Create the mesh and add it to the scene
     var wall = new THREE.Mesh(geometry, material);
-    wall.position.set(0, 10, -15); // Adjust the position as needed
+    wall.position.set(0, 10, -15);
     scene.add(wall);
 
     let box = new THREE.Box3().setFromObject(wall);
     let size = box.getSize(new THREE.Vector3());
 
-    // Create a box shape for the table with the actual size of the table
     const wallshape = new CANNON.Box(new CANNON.Vec3(size.x, size.y, size.z));
 
-    // Create a body for the table and add the shape to it
-    const wallbody = new CANNON.Body({ mass: 0 }); // The table is static, so its mass is 0
+    const wallbody = new CANNON.Body({ mass: 0 });
     wallbody .addShape(wallshape);
     wallbody .position.copy(wall.position);
     world.addBody(wallbody );
@@ -470,11 +469,9 @@ textureLoader.load('walltext.png', function(texture) {
     let box = new THREE.Box3().setFromObject(wall);
     let size = box.getSize(new THREE.Vector3());
 
-    // Create a box shape for the table with the actual size of the table
     const wallshape = new CANNON.Box(new CANNON.Vec3(size.x, size.y, size.z));
 
-    // Create a body for the table and add the shape to it
-    const wallbody = new CANNON.Body({ mass: 0 }); // The table is static, so its mass is 0
+    const wallbody = new CANNON.Body({ mass: 0 }); 
     wallbody .addShape(wallshape);
     wallbody .position.copy(wall.position);
     world.addBody(wallbody );
@@ -482,24 +479,21 @@ textureLoader.load('walltext.png', function(texture) {
 
 // right wall
 textureLoader.load('walltext.png', function(texture) {
-    // Create the geometry and material
-    var geometry = new THREE.PlaneGeometry(50, 50); // Adjust the size as needed
+
+    var geometry = new THREE.PlaneGeometry(50, 50); 
     var material = new THREE.MeshStandardMaterial({ map: texture });
 
-    // Create the mesh and add it to the scene
     var wall = new THREE.Mesh(geometry, material);
-    wall.position.set(50, 10, 10); // Adjust the position as needed
+    wall.position.set(50, 10, 10); 
     wall.rotation.set(0, -Math.PI/2, 0);
     scene.add(wall);
 
     let box = new THREE.Box3().setFromObject(wall);
     let size = box.getSize(new THREE.Vector3());
 
-    // Create a box shape for the table with the actual size of the table
     const wallshape = new CANNON.Box(new CANNON.Vec3(size.x, size.y, size.z));
 
-    // Create a body for the table and add the shape to it
-    const wallbody = new CANNON.Body({ mass: 0 }); // The table is static, so its mass is 0
+    const wallbody = new CANNON.Body({ mass: 0 }); 
     wallbody .addShape(wallshape);
     wallbody .position.copy(wall.position);
     world.addBody(wallbody );
@@ -507,25 +501,23 @@ textureLoader.load('walltext.png', function(texture) {
 
 // floor texture
 textureLoader.load('floortext.jpg', function(texture) {
-    // Create the geometry and material
-    var geometry = new THREE.PlaneGeometry(100, 70); // Adjust the size as needed
+
+    var geometry = new THREE.PlaneGeometry(100, 70); 
     var material = new THREE.MeshStandardMaterial({ map: texture });
 
     // Create the mesh and add it to the scene
     var floor = new THREE.Mesh(geometry, material);
     floor.rotation.set(-Math.PI / 2, 0, 0);
     floor.receiveShadow = true;
-    floor.position.set(0, -15, 10); // Adjust the position as needed
+    floor.position.set(0, -15, 10); 
     scene.add(floor);
 
     let box = new THREE.Box3().setFromObject(floor);
     let size = box.getSize(new THREE.Vector3());
 
-    // Create a box shape for the table with the actual size of the table
     const floorshape = new CANNON.Box(new CANNON.Vec3(size.x, size.y, size.z));
 
-    // Create a body for the table and add the shape to it
-    const floorbody = new CANNON.Body({ mass: 0 }); // The table is static, so its mass is 0
+    const floorbody = new CANNON.Body({ mass: 0 });
     floorbody.addShape(floorshape);
     floorbody.position.copy(floor.position);
     world.addBody(floorbody);
@@ -533,13 +525,13 @@ textureLoader.load('floortext.jpg', function(texture) {
 
 // ceiling texture
 textureLoader.load('ceilingtext.png', function(texture) {
-    // Create the geometry and material
-    var geometry = new THREE.PlaneGeometry(80, 40); // Adjust the size as needed
+
+    var geometry = new THREE.PlaneGeometry(80, 40); 
     var material = new THREE.MeshStandardMaterial({ map: texture });
 
     var ceiling = new THREE.Mesh(geometry, material);
     ceiling.rotation.set(Math.PI / 2, 0, 0);
-    ceiling.position.set(0, 35, 10); // Adjust the position as needed
+    ceiling.position.set(0, 35, 10); 
     scene.add(ceiling);
 });
 
@@ -577,16 +569,17 @@ directionallight.shadow.camera.near = 0.01;
 directionallight.shadow.camera.far = 50;
 directionallight.shadow.mapSize.width = 1024; 
 directionallight.shadow.mapSize.height = 1024;
-const shadowCameraHelper = new THREE.CameraHelper(directionallight.shadow.camera);
+//const shadowCameraHelper = new THREE.CameraHelper(directionallight.shadow.camera);
 //scene.add(shadowCameraHelper);
-const directionallighthelper = new THREE.DirectionalLightHelper( directionallight, 20, 0xff0000);
+//const directionallighthelper = new THREE.DirectionalLightHelper( directionallight, 20, 0xff0000);
 //scene.add( directionallighthelper );
 scene.add(directionallight);
 
-// GUI FOR LIGHTS AND STATS
+// GUI FOR LIGHTS 
 const gui = new GUI();
 gui.width = 320;
 
+// changes position of x
 gui.add({name: 'Spotlight X', value: spotlight.position.x}, 'value', -30, 30)
     .name('Spotlight X')
     .onChange(function(value) {
@@ -594,6 +587,7 @@ gui.add({name: 'Spotlight X', value: spotlight.position.x}, 'value', -30, 30)
         spotlight.updateMatrixWorld();
     });
 
+// changes position of y
 gui.add({name: 'Spotlight Y', value: spotlight.position.y}, 'value', -30, 50)
     .name('Spotlight Y')
     .onChange(function(value) {
@@ -601,6 +595,7 @@ gui.add({name: 'Spotlight Y', value: spotlight.position.y}, 'value', -30, 50)
         spotlight.updateMatrixWorld();
     });
 
+// changes position of z
 gui.add({name: 'Spotlight Z', value: spotlight.position.z}, 'value', -30, 50)
     .name('Spotlight Z')
     .onChange(function(value) {
@@ -608,12 +603,14 @@ gui.add({name: 'Spotlight Z', value: spotlight.position.z}, 'value', -30, 50)
         spotlight.updateMatrixWorld();
     });
 
+// changes intensity
 gui.add({name: 'Spotlight Intensity', value: spotlight.intensity}, 'value', 0, 500)
     .name('Spotlight Intensity')
     .onChange(function(value) {
         spotlight.intensity = value;
     });
 
+// turn on/off
 var parameters = {
         'Spotlight Switch': true
     };
@@ -623,6 +620,7 @@ gui.add(parameters, 'Spotlight Switch')
         spotlight.visible = value;
     });
 
+    // rotates the spotlight
     let rotation = new THREE.Euler(-Math.PI, 0, 0, 'YXZ');
 
     gui.add({name: 'Spotlight Rotation X', value: rotation.x}, 'value', -Math.PI, Math.PI)
@@ -727,9 +725,10 @@ window.addEventListener('keydown', (event) =>{
     camera.lookAt(lookAtVector);
 });
 
+// if objects were put in the bin, increase the point, play a sound effect and update the UI
 function objectRecycled() {
-    points += 10; // Increase the points
-    pointsText.nodeValue = 'Points: ' + points; // Update the points on the UI
+    points += 10; 
+    pointsText.nodeValue = 'Points: ' + points;
     
     // sound effect
     const listener = new THREE.AudioListener();
@@ -746,6 +745,7 @@ function objectRecycled() {
     });
 }
 
+// physics update function
 function update(){
     world.step(1 / 60);
     for (let name in objects) {
@@ -753,10 +753,10 @@ function update(){
         objects[name].model.quaternion.copy(objects[name].body.quaternion);
     }
     for (let body of bodiesToRemove) {
-        // Find the name that corresponds to the body
+        // find the name that corresponds to the body
         let name = Object.keys(objects).find(name => objects[name].body === body);
         if (name) {
-            // Get the model from the objects map
+            // get the model from the objects map
             let model = objects[name].model;
             if (model) {
                 scene.remove(model);
@@ -765,7 +765,7 @@ function update(){
             objectRecycled();
         }
     }
-    // Clear the list
+    // clear the list
     bodiesToRemove = [];
 }
 
@@ -773,6 +773,6 @@ function update(){
 function render(){
     composer.render();
 }
-// return to main 
+// return to main
 return {scene, camera, render, update, gui};
 }
