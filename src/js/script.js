@@ -73,7 +73,7 @@ var debris1, debris1Box;
 var earth, earthBox;
 loadModel("earth", earthUrl.href, new THREE.Vector3(3400, 2, -750), new THREE.Vector3(20, 20, 20), new THREE.Euler(0, 0, 0), 10000, true, true);
 var sun, sunBox;
-loadModel("sun", sunUrl.href, new THREE.Vector3(-1000, 5, -1500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 10000, true, true);
+loadModel("sun", sunUrl.href, new THREE.Vector3(-1000, 200, -1500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 10000, true, true);
 var moon, moonBox;
 loadModel("moon", moonUrl.href, new THREE.Vector3(0, -200, 900), new THREE.Vector3(200, 200, 200), new THREE.Euler(0, 0, 0), 100000, true, true);
 
@@ -169,9 +169,11 @@ function animate(time) {
 
 
         if (spaceship) {
+            //console.log("spaceshipBox.quaternion");
+            console.log(controls.totalRotation);
             spaceshipMovement();
             spaceship.position.copy(spaceshipBox.position);
-            spaceship.quaternion.copy(spaceshipBox.quaternion);
+            //spaceship.quaternion.copy(spaceshipBox.quaternion);
         }
         if (debris1) {
             debris1.position.copy(debris1Box.position);
@@ -189,7 +191,7 @@ function spaceshipMovement() {
     rightPLight.position.set(spaceship.position.x -4, spaceship.position.y, spaceship.position.z+7);
     leftPLight.position.set(spaceship.position.x +4, spaceship.position.y, spaceship.position.z+7);
 
-    camera.position.set(spaceship.position.x, spaceship.position.y + 15, spaceship.position.z + 50); // set the coords of camera
+    camera.position.set(spaceship.position.x, spaceship.position.y + 20, spaceship.position.z + 50); // set the coords of camera
 
     // keeping speed between assigned values
     if (spaceshipBox.velocity.z > controls.minSpeed) { spaceshipBox.velocity.z = controls.minSpeed-1; }
@@ -217,57 +219,75 @@ function spaceshipMovement() {
 
     let rotationSpeed = 0.01;
     let quaternion = new CANNON.Quaternion();
-    if (controls.up && controls.totalRotation.x > controls.minRotation) {
+    if (controls.up && controls.totalRotation.x > -30) {
         spaceshipBox.velocity.y += 0.5;
-        quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), -rotationSpeed);
-        spaceshipBox.quaternion = spaceshipBox.quaternion.mult(quaternion);
-        controls.totalRotation.x -= rotationSpeed;
+        spaceship.rotation.x += Math.PI/180;
+        spaceshipBox.quaternion.copy(spaceship.quaternion);
+        spaceship.quaternion.copy(spaceshipBox.quaternion);
+        // quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), -rotationSpeed);
+        // spaceshipBox.quaternion = spaceshipBox.quaternion.mult(quaternion);
+        controls.totalRotation.x -= 1;
+    } else {
+        spaceshipBox.velocity.y = 0;
     }
-    if (controls.down && controls.totalRotation.x < controls.maxRotation) {
+    if (controls.down && controls.totalRotation.x < 30) {
         spaceshipBox.velocity.y -= 0.5;
-        quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), rotationSpeed);
-        spaceshipBox.quaternion = spaceshipBox.quaternion.mult(quaternion);
-        controls.totalRotation.x += rotationSpeed;
+        spaceship.rotation.x -= Math.PI/180;
+        spaceshipBox.quaternion.copy(spaceship.quaternion);
+        spaceship.quaternion.copy(spaceshipBox.quaternion);
+        controls.totalRotation.x += 1;
+    } else {
+        spaceshipBox.velocity.y = 0;
     }
     if (!controls.down && !controls.up && controls.totalRotation.x !== 0) {
         if (controls.totalRotation.x > 0) {
-            quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), -rotationSpeed);
-            spaceshipBox.quaternion = spaceshipBox.quaternion.mult(quaternion);
-            controls.totalRotation.x -= rotationSpeed;
+            spaceship.rotation.x += Math.PI/180;
+            spaceshipBox.quaternion.copy(spaceship.quaternion);
+            spaceship.quaternion.copy(spaceshipBox.quaternion);
+            controls.totalRotation.x -= 1;
         }
         if (controls.totalRotation.x < 0) {
-            quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), rotationSpeed);
-            spaceshipBox.quaternion = spaceshipBox.quaternion.mult(quaternion);
-            controls.totalRotation.x += rotationSpeed;
+            spaceship.rotation.x -= Math.PI/180;
+            spaceshipBox.quaternion.copy(spaceship.quaternion);
+            spaceship.quaternion.copy(spaceshipBox.quaternion);
+            controls.totalRotation.x += 1;
         }
     }
+
     if (!controls.left && !controls.right && controls.totalRotation.z !== 0) {
         if (controls.totalRotation.z > 0) {
-            quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1), -rotationSpeed);
-            spaceshipBox.quaternion = spaceshipBox.quaternion.mult(quaternion);
-            controls.totalRotation.z -= rotationSpeed;
+            spaceship.rotation.z -= Math.PI/450 + 0.01;
+            spaceshipBox.quaternion.copy(spaceship.quaternion);
+            spaceship.quaternion.copy(spaceshipBox.quaternion);
+            controls.totalRotation.z -= 1;
         }
         if (controls.totalRotation.z < 0) {
-            quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1), rotationSpeed);
-            spaceshipBox.quaternion = spaceshipBox.quaternion.mult(quaternion);
-            controls.totalRotation.z += rotationSpeed;
+            spaceship.rotation.z += Math.PI/450 + 0.01;
+            spaceshipBox.quaternion.copy(spaceship.quaternion);
+            spaceship.quaternion.copy(spaceshipBox.quaternion);
+            controls.totalRotation.z += 1;
         }
     }
 
-    if (controls.left && controls.totalRotation.z > controls.minRotation) {
+    if (controls.left && controls.totalRotation.z > -30) {
         spaceshipBox.velocity.x -= 0.5;
-        quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1), -rotationSpeed);
-        spaceshipBox.quaternion = spaceshipBox.quaternion.mult(quaternion);
-        controls.totalRotation.z -= rotationSpeed;
+        spaceship.rotation.z -= Math.PI/450 + 0.01;
+        spaceshipBox.quaternion.copy(spaceship.quaternion);
+        spaceship.quaternion.copy(spaceshipBox.quaternion);
+        controls.totalRotation.z -= 1;
+    } else {
+        spaceshipBox.velocity.x = 0;
     }
-    if (controls.right && controls.totalRotation.z < controls.maxRotation) {
+    if (controls.right && controls.totalRotation.z < 30) {
         spaceshipBox.velocity.x += 0.5;
-        quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1), rotationSpeed);
-        spaceshipBox.quaternion = spaceshipBox.quaternion.mult(quaternion);
-        controls.totalRotation.z += rotationSpeed;
+        spaceship.rotation.z += Math.PI/450 + 0.01;
+        spaceshipBox.quaternion.copy(spaceship.quaternion);
+        spaceship.quaternion.copy(spaceshipBox.quaternion);
+        controls.totalRotation.z += 1;
+    } else {
+        spaceshipBox.velocity.x = 0;
     }
     spaceshipBox.quaternion.y = 1;
-
 }
 
 document.getElementById("Play").onclick = () => {
