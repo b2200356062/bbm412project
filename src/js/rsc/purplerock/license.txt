@@ -1,0 +1,11 @@
+Model Information:
+* title:	Stylized glowing rock
+* source:	https://sketchfab.com/3d-models/stylized-glowing-rock-cff032b33b544542a6af67cd7b591edf
+* author:	Zorak-Art (https://sketchfab.com/William.Charbonneau)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Stylized glowing rock" (https://sketchfab.com/3d-models/stylized-glowing-rock-cff032b33b544542a6af67cd7b591edf) by Zorak-Art (https://sketchfab.com/William.Charbonneau) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import * as DAT from 'dat.gui';
 import * as CANNON from 'cannon-es';
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
+import {randFloatSpread} from "three/src/math/MathUtils";
+import {clone} from "three/addons/utils/SkeletonUtils";
 import {Mesh, MeshBasicMaterial, TextureLoader} from "three";
 import {PointerLockControls} from "three/addons/controls/PointerLockControls.js";
 import Stats from "three/addons/libs/stats.module.js";
@@ -12,7 +14,7 @@ import Stats from "three/addons/libs/stats.module.js";
 
 // 26.12.23: key bindings for speedUp/slowDown/up/down changed
 
-// // fps counter
+// fps counter
 // const stats = new Stats();
 // stats.showPanel(0);
 // document.body.appendChild(stats.dom);
@@ -28,6 +30,11 @@ var urls = [
     'rsc/triangleGLTF/scene.gltf',
     'rsc/blueRock/scene.gltf',
     'rsc/maintRobot/scene.gltf',
+    'rsc/earth/scene.gltf',
+    'rsc/sun/scene.gltf',
+    'rsc/moon/scene.gltf',
+    'rsc/lowPolyShip/scene.gltf',
+    'rsc/lowPolyEarth/scene.gltf',
 ]
 
 
@@ -35,8 +42,14 @@ var urls = [
 const shipUrl = new URL(urls[2], import.meta.url);
 const debris1Url = new URL(urls[3], import.meta.url);
 const debris2Url = new URL(urls[4], import.meta.url);
+const earthUrl = new URL(urls[5], import.meta.url);
+const moonUrl = new URL(urls[7], import.meta.url);
+const sunUrl = new URL(urls[6], import.meta.url);
+
 
 const renderer = new THREE.WebGLRenderer();
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1;
 const gui = new DAT.GUI();
 
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -46,18 +59,55 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
     75,  // field of view
     window.innerWidth / window.innerHeight, // aspect
-    0.1, // near
-    1000 // far
+    0.01, // near
+    3000 // far
 );
 var cameraControls = new PointerLockControls(camera, renderer.domElement);
 
 const assetLoader = new GLTFLoader();
 
-
 var spaceship, spaceshipBox;
 loadModel("spaceship", shipUrl.href, new THREE.Vector3(0, 5, 0), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, -1 * Math.PI, 0), 5, true, true);
 var debris1, debris1Box;
-loadModel("debris1", debris1Url.href, new THREE.Vector3(0, 5, -500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true);
+//loadModel("debris1", debris1Url.href, new THREE.Vector3(0, 5, -500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true);
+var earth, earthBox;
+loadModel("earth", earthUrl.href, new THREE.Vector3(3400, 2, -750), new THREE.Vector3(20, 20, 20), new THREE.Euler(0, 0, 0), 10000, true, true);
+var sun, sunBox;
+loadModel("sun", sunUrl.href, new THREE.Vector3(-1000, 5, -1500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 10000, true, true);
+var moon, moonBox;
+loadModel("moon", moonUrl.href, new THREE.Vector3(0, -200, 900), new THREE.Vector3(200, 200, 200), new THREE.Euler(0, 0, 0), 100000, true, true);
+
+// star background
+const stars = new Array(0);
+for ( let i = 0; i < 5000; i ++ ) {
+    let x = THREE.MathUtils.randFloatSpread( 2000 );
+    let y = THREE.MathUtils.randFloatSpread( 2000 );
+    let z = THREE.MathUtils.randFloatSpread( 2000 );
+    // near stars are not created
+    if (x*x + y*y + z*z > 750000) {
+        stars.push(x, y, z);
+    }
+}
+
+const starsGeometry = new THREE.BufferGeometry();
+const sprite = new THREE.TextureLoader().load('rsc/star.png');
+sprite.colorSpace = THREE.SRGBColorSpace;
+
+starsGeometry.setAttribute(
+    "position", new THREE.Float32BufferAttribute(stars, 3)
+);
+
+const starsMaterial = new THREE.PointsMaterial( { color: 0xffffff, map: sprite, transparent: true, size: 1, sizeAttenuation: true} );
+const spacebackground = new THREE.Points( starsGeometry, starsMaterial );
+scene.add(spacebackground);
+
+let maxJunkCount = 70;
+let currentJunkCount = 0;
+let junkArray = [];
+
+let isRandom = false;
+
+generateSpaceJunk();
 
 // spaceship controls
 const controls = {
@@ -69,29 +119,29 @@ const controls = {
     down: false,
     pause: false,
 
-    speed: 0.02,
+    speed: 1,
     minSpeed: -15,
     maxSpeed: -300,
     minRotation: -45 * Math.PI / 180,
     maxRotation: 45 * Math.PI / 180,
     totalRotation: { x:0, y:0, z:0 },
 
-    boost: false,
-    boostCoolDown: 20, // minimum seconds between two carried out boost commands
-    coolDownTime: 0, // calculated time after last carried out boost command
+    // boost: false,
+    // boostCoolDown: 20, // minimum seconds between two carried out boost commands
+    // coolDownTime: 0, // calculated time after last carried out boost command
 };
 
-// add a grid to help us
-const gridHelper = new THREE.GridHelper(300000, 10000);
-scene.add(gridHelper);
+// // add a grid to help us
+// const gridHelper = new THREE.GridHelper(300000, 10000);
+// scene.add(gridHelper);
 
 // let there be light
-const ambientLight = new THREE.AmbientLight(0xccffe6); // ambient light
+const ambientLight = new THREE.AmbientLight(0x000409); // ambient light
 scene.add(ambientLight);
 
-const rightPLight = new THREE.PointLight(0xff3300, 10000*controls.speed);
+const rightPLight = new THREE.PointLight(0xff3300, 40);
 scene.add(rightPLight);
-const leftPLight = new THREE.PointLight(0xff3300, 10000*controls.speed);
+const leftPLight = new THREE.PointLight(0xff3300, 40);
 scene.add(leftPLight);
 
 // const rPLightHelper = new THREE.PointLightHelper(rightPLight, 1);
@@ -99,8 +149,8 @@ scene.add(leftPLight);
 // scene.add(rPLightHelper);
 // scene.add(lPLightHelper);
 
-rightPLight.position.set(-5,0,0);
-leftPLight.position.set(5,0,0);
+// rightPLight.position.set(-5,0,0);
+// leftPLight.position.set(5,0,0);
 
 const options = {
     lightIntensity: 0.5,
@@ -129,6 +179,7 @@ function animate(time) {
         }
 
     }
+    //stats.update();
     renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
@@ -138,7 +189,7 @@ function spaceshipMovement() {
     rightPLight.position.set(spaceship.position.x -4, spaceship.position.y, spaceship.position.z+7);
     leftPLight.position.set(spaceship.position.x +4, spaceship.position.y, spaceship.position.z+7);
 
-    camera.position.set(spaceship.position.x, spaceship.position.y + 30, spaceship.position.z + 100); // set the coords of camera
+    camera.position.set(spaceship.position.x, spaceship.position.y + 15, spaceship.position.z + 50); // set the coords of camera
 
     // keeping speed between assigned values
     if (spaceshipBox.velocity.z > controls.minSpeed) { spaceshipBox.velocity.z = controls.minSpeed-1; }
@@ -147,19 +198,19 @@ function spaceshipMovement() {
     // animation + control panel
     if (controls.speedUp) {
         if (controls.speed >= controls.maxSpeed/2) {
-            leftPLight.power += 0.1;
-            rightPLight.power += 0.1;
+            leftPLight.power += 1;
+            rightPLight.power += 1;
             spaceshipBox.velocity.z -= 0.5;
         } else if (controls.speed < controls.maxSpeed/2 && controls.speed >= controls.maxSpeed) {
-            leftPLight.power += 0.1;
-            rightPLight.power += 0.1;
+            leftPLight.power += 1;
+            rightPLight.power += 1;
             spaceshipBox.velocity.z -= 0.25;
         }
     }
     if (controls.slowDown) {
         if (controls.speed > controls.minSpeed) {
-            leftPLight.power -= 0.1;
-            rightPLight.power -= 0.1;
+            leftPLight.power -= 1;
+            rightPLight.power -= 1;
             spaceshipBox.velocity.z += 0.5;
         }
     }
@@ -291,12 +342,12 @@ function loadModel(modelName, path, position, scale, rotation, mass, castShadow,
     let body, model;
     assetLoader.load(path, function (gltf) {
         model = gltf.scene;
-        // model.traverse((node) => {
-        //     if (node instanceof THREE.Mesh) {
-        //         node.castShadow = castShadow;
-        //         node.receiveShadow = receiveShadow;
-        //     }
-        // });
+        model.traverse((node) => {
+            if (node instanceof THREE.Mesh) {
+                node.castShadow = castShadow;
+                node.receiveShadow = receiveShadow;
+            }
+        });
         model.scale.set(scale.x, scale.y, scale.z);
         model.position.copy(position);
         model.rotation.copy(rotation);
@@ -320,12 +371,169 @@ function loadModel(modelName, path, position, scale, rotation, mass, castShadow,
             spaceshipBox.angularDamping = 1;
             spaceshipBox.velocity = new CANNON.Vec3(0, 0, -25);
         }
-        else if (modelName == "debris1") {
-            debris1 = model;
-            debris1Box = body;
+        else if (modelName == "earth") {
+            earth = model;
+            earthBox = body;
+        }
+        else if (modelName == "moon") {
+            moon = model;
+            moonBox = body;
+        }
+        else if (modelName == "sun") {
+            sun = model;
+            sunBox = body;
+            const dlight = new THREE.DirectionalLight(0xffffff, 15);
+            dlight.position.set(model.position.x,model.position.y,model.position.z);
+            scene.add(dlight);
         }
     }, undefined, function (error) {
         console.error(error);
     });
+}
+
+function generateSpaceJunk() {
+    removeSpaceJunk();
+    const junkPositions = new Array(0);
+
+    if (isRandom) {
+        while (currentJunkCount <= maxJunkCount) {
+            let {x, y, z} = generateRandPos(50, 2.5, 50);
+            if (x*x + z*z > 121 && x*x + z*z < 625) {
+                junkPositions.push([x, y, z]);
+                currentJunkCount += 1;
+            }
+        }
+    }
+    else {
+        // initially generate a five times larger random sample set
+        while (currentJunkCount <= 5 * maxJunkCount) {
+            let {x, y, z} = generateRandPos(50, 2.5, 50);
+            if (x*x + z*z > 121 && x*x + z*z < 625) {
+                junkPositions.push([x, y, z]);
+                currentJunkCount += 1;
+            }
+        }
+
+        // eliminates the samples with the most weight until the desired number of samples are met
+        while (currentJunkCount > maxJunkCount) {
+            let largestWeight = 0;
+            let index;
+            for (let i = 0; i < currentJunkCount; i++) {
+                let weight = 0;
+                const sample = junkPositions[i];
+                for (let j = 0; j < currentJunkCount; j++) {
+                    const comparison = junkPositions[j];
+                    if ((sample[0] - comparison[0]) * (sample[0] - comparison[0]) + (sample[2] - comparison[2]) * (sample[2] - comparison[2]) < 9) {
+                        weight += 1;
+                    }
+                }
+
+                if (weight > largestWeight) {
+                    largestWeight = weight;
+                    index = i;
+                }
+            }
+
+            junkPositions.splice(index, 1);
+            currentJunkCount -= 1;
+            console.log(currentJunkCount);
+        }
+    }
+
+    const junkloader = new Promise((resolve, reject) => {
+        assetLoader.load('rsc/greenrock/scene.gltf', function(gltf) {
+            const greenrock = gltf.scene;
+            for (let i = 0; i < maxJunkCount/3; i++) {
+                const junk = clone(greenrock);
+                junk.position.set(...junkPositions[i]);
+                junk.rotation.set(randFloatSpread((2 * Math.PI)), randFloatSpread((2 * Math.PI)), randFloatSpread((2 * Math.PI)));
+                junk.scale.set(1, 1, 1);
+                junk.userData.velocityx = randFloatSpread(0.001);
+                junk.userData.velocityy = randFloatSpread(0.001);
+                junk.userData.velocityz = randFloatSpread(0.001);
+                junk.userData.rotationx = randFloatSpread(0.002);
+                junk.userData.rotationy = randFloatSpread(0.002);
+                junk.userData.rotationz = randFloatSpread(0.002);
+                junk.name = "junk";
+                scene.add(junk);
+                junkArray.push(junk);
+            }
+            resolve();
+        }, assetLoader.load('purplerock/scene.gltf', function(gltf) {
+            const purplerock = gltf.scene;
+            for (let i = 0; i < maxJunkCount/3; i++) {
+                const junk = clone(purplerock);
+                junk.position.set(...junkPositions[i + Math.floor((maxJunkCount / 3))]);
+                junk.rotation.set(randFloatSpread((2 * Math.PI)), randFloatSpread((2 * Math.PI)), randFloatSpread((2 * Math.PI)));
+                junk.scale.set(0.2, 0.2, 0.2);
+                junk.userData.velocityx = randFloatSpread(0.001);
+                junk.userData.velocityy = randFloatSpread(0.001);
+                junk.userData.velocityz = randFloatSpread(0.001);
+                junk.userData.rotationx = randFloatSpread(0.002);
+                junk.userData.rotationy = randFloatSpread(0.002);
+                junk.userData.rotationz = randFloatSpread(0.002);
+                junk.name = "junk";
+                scene.add(junk);
+                junkArray.push(junk);
+            }
+            resolve();
+        }, assetLoader.load('bluerock/scene.gltf', function(gltf) {
+            const bluerock = gltf.scene;
+            for (let i = 0; i < maxJunkCount/3; i++) {
+                const junk = clone(bluerock);
+                junk.position.set(...junkPositions[i + Math.floor((2 * maxJunkCount / 3))]);
+                junk.rotation.set(randFloatSpread((2 * Math.PI)), randFloatSpread((2 * Math.PI)), randFloatSpread((2 * Math.PI)));
+                junk.scale.set(0.005, 0.005, 0.005);
+                junk.userData.velocityx = randFloatSpread(0.001);
+                junk.userData.velocityy = randFloatSpread(0.001);
+                junk.userData.velocityz = randFloatSpread(0.001);
+                junk.userData.rotationx = randFloatSpread(0.002);
+                junk.userData.rotationy = randFloatSpread(0.002);
+                junk.userData.rotationz = randFloatSpread(0.002);
+                junk.name = "junk";
+                scene.add(junk);
+                junkArray.push(junk);
+            }
+            resolve();
+        }, undefined, function (error) {
+            console.error(error);
+            reject(error);
+        })));
+    });
+}
+
+let mixer;
+let moonTheta = 0;
+function update() {
+    controls.update(); // mouse update
+
+    if (mixer) {
+        mixer.update(0.01);
+    }
+    if (earth) {
+        earth.rotation.y += 0.2;
+    }
+
+    if (moon) {
+        moon.rotation.y += 0.2;
+        moonTheta += 0.001;
+        const s = Math.sin(moonTheta);
+        const c = Math.cos(moonTheta);
+        moon.position.x = 20 * (c - s);
+        moon.position.z = 20 * (s + c);
+    }
+}
+function generateRandPos(rangeX, rangeY, rangeZ) {
+    let x = THREE.MathUtils.randFloatSpread( rangeX );
+    let y = THREE.MathUtils.randFloatSpread( rangeY );
+    let z = THREE.MathUtils.randFloatSpread( rangeZ );
+    return {x, y, z};
+}
+function removeSpaceJunk() {
+    for (let i = 0; i < currentJunkCount; i++) {
+        scene.remove(scene.getObjectByName("junk"));
+    }
+    junkArray = [];
+    currentJunkCount = 0;
 }
 
