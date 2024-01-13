@@ -1,0 +1,11 @@
+Model Information:
+* title:	Retro-style Desk Fan
+* source:	https://sketchfab.com/3d-models/retro-style-desk-fan-79bb384f2ed545a5ae8c2b9cfa06cd8f
+* author:	futaba@blender (https://sketchfab.com/futaba_blender)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Retro-style Desk Fan" (https://sketchfab.com/3d-models/retro-style-desk-fan-79bb384f2ed545a5ae8c2b9cfa06cd8f) by futaba@blender (https://sketchfab.com/futaba_blender) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

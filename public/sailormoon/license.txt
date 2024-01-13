@@ -1,0 +1,11 @@
+Model Information:
+* title:	Tamagotchi (Pet Sailor Moon)
+* source:	https://sketchfab.com/3d-models/tamagotchi-pet-sailor-moon-7cfe1fae9b414f07bcc1d5719bdebf9b
+* author:	Aldemona (https://sketchfab.com/Aldemona)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Tamagotchi (Pet Sailor Moon)" (https://sketchfab.com/3d-models/tamagotchi-pet-sailor-moon-7cfe1fae9b414f07bcc1d5719bdebf9b) by Aldemona (https://sketchfab.com/Aldemona) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

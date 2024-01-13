@@ -139,13 +139,34 @@ div2.style.display = 'none';
 
 // physics
 const world = new CANNON.World();
-world.gravity.set(0, -9.82, 0); // m/s²
+world.gravity.set(0, -15.82, 0); // m/s²
 
 const loader = new GLTFLoader();
 let objects = {};
 let bodiesToRemove = [];
-let table, lamp, greenrock, bin, robot;
-let tableBody, greenrockBody, binBody, robotBody;
+
+var composer = new EffectComposer(renderer);
+// Add a RenderPass
+composer.addPass(new RenderPass(scene, camera));
+
+// Add a Brightness/Contrast pass
+var brightnessContrastPass = new ShaderPass(BrightnessContrastShader);
+brightnessContrastPass.uniforms['brightness'].value = 0 // Reduce brightness
+brightnessContrastPass.uniforms['contrast'].value = 0 // Reduce contrast
+composer.addPass(brightnessContrastPass);
+
+// adding a depth of field effect for the inspection mode.
+let focusObjectPosition = new THREE.Vector3(0, 5, 20);
+let focusDistance = camera.position.distanceTo(focusObjectPosition);
+let bokehPass = new BokehPass(scene, camera, {
+    focus: focusDistance,
+    aperture: 0.025,
+    maxblur: 0.01,
+    width: WIDTH,
+    height: HEIGHT
+});
+composer.addPass(bokehPass);
+bokehPass.enabled = false;
 
 // load model function
 function loadModel(name, path, position, scale, rotation, mass, castShadow, recieveShadow, interactable) {
@@ -173,9 +194,6 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
             if (name === 'table') {
                 size.y *= 1.5;
             }
-            if(name === 'reactor'){
-                size.y *= 0.10;
-            }
             if(name === 'robot'){
                 size.y *= 0.7;
                 size.z *= 1.5;
@@ -184,9 +202,10 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
                 size.y *= 0.5;
                 size.x *= 0.75;
             }
-            if(name === 'heater'){
-                size.y *= 0.15;
+            if(name === 'box'){
+                size.y *= 0.1;
             }
+
             // if(name === 'charger'){
             //     size.z *= 1.5;
             //     size.y *= 0.5;
@@ -225,12 +244,17 @@ Promise.all([
     loadModel('bin2', 'cop/scene.gltf', new THREE.Vector3(-17, -10, 17), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
     loadModel('greenrock', 'greenrock/scene.gltf', new THREE.Vector3(0, 3, 12), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 3, true, true, true),
     loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI/2, 0, 0), 5, true, true, true),
-    loadModel('heater', 'heater/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true, true),
+    //loadModel('heater', 'heater/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true, true),
     //loadModel('charger', 'turbocharger/scene.gltf', new THREE.Vector3(2, 3, 7), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(Math.PI/2, 0, 0), 5, true, true, true),
     //loadModel('reactor', 'nuclearreactor/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(3, 3, 3), new THREE.Euler(0, 0, 0), 6, true, true, true),
+    loadModel('box', 'electricbox/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 5, true, true, true),
+    loadModel('fan', 'electricfan/scene.gltf', new THREE.Vector3(-5, 3, 15), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true, true),
+    loadModel('sailormoon', 'sailormoon/scene.gltf', new THREE.Vector3(5, 3, 15), new THREE.Vector3(20, 20, 20), new THREE.Euler(0, 0, 0), 5, true, true, true),
+    loadModel('muz', 'banana/scene.gltf', new THREE.Vector3(5, 3, 7), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true, true),
+    
 ]).then(() => {
 
-    // algorithms for intersection deetection, physics and inspection mode
+    // algorithms for intersection deetection, physics and inspection modef
     let binBody = objects['bin'].body;
     let binBody2 = objects['bin2'].body;
     let raycaster = new THREE.Raycaster();
@@ -265,9 +289,7 @@ Promise.all([
                 offset.copy(intersection).sub(selectedObject.position);
                 selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
             }
-            console.log(selectedObject.id);
         }
-
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
 
@@ -293,6 +315,8 @@ Promise.all([
     
             // Disable physics
             selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
+            
+            bokehPass.enabled = true;
         }
 
 
@@ -300,10 +324,9 @@ Promise.all([
     
     window.addEventListener('mousemove', (event) => {
         if (inspectionMode && selectedObject && mouseDown) {
-            // Calculate the change in mouse position
-           // Calculate the change in mouse position
-        let deltaX = (event.clientX - lastMouseX); // Negate the change in x-coordinate
-        let deltaY = (event.clientY - lastMouseY); // Negate the change in y-coordinate
+
+        let deltaX = (event.clientX - lastMouseX);
+        let deltaY = (event.clientY - lastMouseY); 
 
         // Create a quaternion representing the rotation around the Y axis
         let quaternionY = new CANNON.Quaternion();
@@ -321,6 +344,7 @@ Promise.all([
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
         }
+        
         else if (!inspectionMode && mouseDown && selectedObject && selectedObject.userData.physicsBody) {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -344,18 +368,45 @@ Promise.all([
     }, false);
 
     window.addEventListener('keydown', (event) => {
-        if(event.key === 'f'){
+        if(event.key === 'f' || event.key === 'F'){
             inspectionMode = !inspectionMode;
 
-            if (!inspectionMode && selectedObject) {
+            if(!inspectionMode){
+                // Disable bokeh pass when not in inspection mode
+                bokehPass.enabled = false;
+            }
+            if (inspectionMode && selectedObject) {
+                // Store the original position and rotation
+                originalPosition = selectedObject.position.clone();
+                originalRotation = selectedObject.rotation.clone();
+    
+            } else if (!inspectionMode && selectedObject) {
+    
                 // Restore the original position and rotation
                 selectedObject.position.copy(originalPosition);
                 selectedObject.rotation.copy(originalRotation);
-                // Enable physics
-                selectedObject.userData.physicsBody.type = CANNON.Body.DYNAMIC;
+    
+                // Update the position and rotation in the physics engine
+                selectedObject.userData.physicsBody.position.copy(selectedObject.position);
+                selectedObject.userData.physicsBody.quaternion.copy(selectedObject.quaternion);
+    
+                // Update the bounding radius
+                selectedObject.userData.physicsBody.updateBoundingRadius();
+    
+                // Make the object kinematic so it stays in place
+                selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
+    
+                // Set the velocity to zero
+                selectedObject.userData.physicsBody.velocity.setZero();
+    
+                // Reset the angular velocity
+                selectedObject.userData.physicsBody.angularVelocity.setZero();
+    
+                // Wake up the body
+                selectedObject.userData.physicsBody.wakeUp();
+    
                 div2.style.display = 'none';
             }
-
         }
     }, false);
 
@@ -392,6 +443,18 @@ textureLoader.load('texttable.png', function(texture) {
     var wall = new THREE.Mesh(geometry, material);
     wall.position.set(0, 10, -15); // Adjust the position as needed
     scene.add(wall);
+
+    let box = new THREE.Box3().setFromObject(wall);
+    let size = box.getSize(new THREE.Vector3());
+
+    // Create a box shape for the table with the actual size of the table
+    const wallshape = new CANNON.Box(new CANNON.Vec3(size.x, size.y, size.z));
+
+    // Create a body for the table and add the shape to it
+    const wallbody = new CANNON.Body({ mass: 0 }); // The table is static, so its mass is 0
+    wallbody .addShape(wallshape);
+    wallbody .position.copy(wall.position);
+    world.addBody(wallbody );
 });
 
 // left wall up
@@ -403,6 +466,18 @@ textureLoader.load('walltext.png', function(texture) {
     wall.position.set(-50, 10, 10); 
     wall.rotation.set(0, Math.PI/2, 0);
     scene.add(wall);
+
+    let box = new THREE.Box3().setFromObject(wall);
+    let size = box.getSize(new THREE.Vector3());
+
+    // Create a box shape for the table with the actual size of the table
+    const wallshape = new CANNON.Box(new CANNON.Vec3(size.x, size.y, size.z));
+
+    // Create a body for the table and add the shape to it
+    const wallbody = new CANNON.Body({ mass: 0 }); // The table is static, so its mass is 0
+    wallbody .addShape(wallshape);
+    wallbody .position.copy(wall.position);
+    world.addBody(wallbody );
 });
 
 // right wall
@@ -416,6 +491,18 @@ textureLoader.load('walltext.png', function(texture) {
     wall.position.set(50, 10, 10); // Adjust the position as needed
     wall.rotation.set(0, -Math.PI/2, 0);
     scene.add(wall);
+
+    let box = new THREE.Box3().setFromObject(wall);
+    let size = box.getSize(new THREE.Vector3());
+
+    // Create a box shape for the table with the actual size of the table
+    const wallshape = new CANNON.Box(new CANNON.Vec3(size.x, size.y, size.z));
+
+    // Create a body for the table and add the shape to it
+    const wallbody = new CANNON.Body({ mass: 0 }); // The table is static, so its mass is 0
+    wallbody .addShape(wallshape);
+    wallbody .position.copy(wall.position);
+    world.addBody(wallbody );
 });
 
 // floor texture
@@ -641,7 +728,6 @@ window.addEventListener('keydown', (event) =>{
 });
 
 function objectRecycled() {
-    console.log("cagrıldım");
     points += 10; // Increase the points
     pointsText.nodeValue = 'Points: ' + points; // Update the points on the UI
     
@@ -659,25 +745,6 @@ function objectRecycled() {
         sound.play();
     });
 }
-var composer = new EffectComposer(renderer);
-// Add a RenderPass
-composer.addPass(new RenderPass(scene, camera));
-
-// Add a Brightness/Contrast pass
-var brightnessContrastPass = new ShaderPass(BrightnessContrastShader);
-brightnessContrastPass.uniforms['brightness'].value = 0 // Reduce brightness
-brightnessContrastPass.uniforms['contrast'].value = 0 // Reduce contrast
-composer.addPass(brightnessContrastPass);
-
-let bokehPass = new BokehPass(scene, camera, {
-    focus: camera.position.toDistance,
-    aperture: 0.0025,
-    maxblur: 0.01,
-    width: WIDTH,
-    height: HEIGHT
-});
-
-//composer.addPass(bokehPass);
 
 function update(){
     world.step(1 / 60);
