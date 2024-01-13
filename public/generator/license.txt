@@ -1,0 +1,11 @@
+Model Information:
+* title:	sci-fi Industrial electric generator
+* source:	https://sketchfab.com/3d-models/sci-fi-industrial-electric-generator-f21b7cdb85b64034a513a68825ee5c8c
+* author:	gz migo (https://sketchfab.com/migopro)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "sci-fi Industrial electric generator" (https://sketchfab.com/3d-models/sci-fi-industrial-electric-generator-f21b7cdb85b64034a513a68825ee5c8c) by gz migo (https://sketchfab.com/migopro) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Aluminium can
+* source:	https://sketchfab.com/3d-models/aluminium-can-e791d3e627614f549f4c2976dca6af28
+* author:	Sergio.Manzoni (https://sketchfab.com/Sergio.Manzoni)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Aluminium can" (https://sketchfab.com/3d-models/aluminium-can-e791d3e627614f549f4c2976dca6af28) by Sergio.Manzoni (https://sketchfab.com/Sergio.Manzoni) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

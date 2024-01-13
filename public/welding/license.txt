@@ -1,0 +1,11 @@
+Model Information:
+* title:	Welding Machine (Mercle OptiMIG 450)
+* source:	https://sketchfab.com/3d-models/welding-machine-mercle-optimig-450-a7764c9a884443109e9d335b6d281b77
+* author:	RAW (https://sketchfab.com/ocbsketch)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Welding Machine (Mercle OptiMIG 450)" (https://sketchfab.com/3d-models/welding-machine-mercle-optimig-450-a7764c9a884443109e9d335b6d281b77) by RAW (https://sketchfab.com/ocbsketch) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

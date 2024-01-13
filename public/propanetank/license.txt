@@ -1,0 +1,11 @@
+Model Information:
+* title:	Simple Propane Tank 2
+* source:	https://sketchfab.com/3d-models/simple-propane-tank-2-cde8b45c57094169a387f59a02a9cf85
+* author:	Blender3D (https://sketchfab.com/Blender3D)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Simple Propane Tank 2" (https://sketchfab.com/3d-models/simple-propane-tank-2-cde8b45c57094169a387f59a02a9cf85) by Blender3D (https://sketchfab.com/Blender3D) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

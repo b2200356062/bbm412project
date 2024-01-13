@@ -33,8 +33,6 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setClearColor(0x000000, 1); // arkaplan rengi
 
-
-
 // in game text for the bins
 let fontloader = new FontLoader();
 fontloader.load('ui/font.json', function(font) {
@@ -44,13 +42,19 @@ fontloader.load('ui/font.json', function(font) {
         size: 0.8, // Size of the text
         height: 0.1, // Thickness of the text
     });
+    let geometry2 = new TextGeometry('Bin 2', {
+        font: font,
+        size: 0.8, // Size of the text
+        height: 0.1, // Thickness of the text
+    });
+
     let material = new THREE.MeshBasicMaterial({color: 0xffffff}); // White color
     let textMesh = new THREE.Mesh(geometry, material);
-    textMesh.position.set(15, -3, 18);
+    textMesh.position.set(15, -3, 22);
     textMesh.rotation.set(0, -Math.PI/3, 0);
     scene.add(textMesh);
-    let textMesh2 = new THREE.Mesh(geometry, material);
-    textMesh2.position.set(-17, -3, 20);
+    let textMesh2 = new THREE.Mesh(geometry2, material);
+    textMesh2.position.set(-17, -3, 23);
     textMesh2.rotation.set(0, Math.PI/3, 0);
     scene.add(textMesh2);
 });
@@ -189,41 +193,64 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
             // Calculate the bounding box of the model
             const box = new THREE.Box3().setFromObject(model);
             const size = box.getSize(new THREE.Vector3());
-    
+
             if (name === 'table') {
                 size.y *= 1.5;
+                size.x *= 0.95;
             }
             if(name === 'robot'){
                 size.y *= 0.7;
-                size.z *= 1.5;
+                size.z *= 1.4;
             }
             if(name ==='bin'){
                 size.y *= 0.5;
                 size.x *= 0.75;
+                size.z *= 0.8;
             }
-            if(name === 'box'){
-                size.y *= 0.1;
+            if(name ==='bin2'){
+                size.y *= 0.5;
+                size.x *= 0.75;
+                size.z *= 0.8;
             }
-
-            // if(name === 'charger'){
-            //     size.z *= 1.5;
-            //     size.y *= 0.5;
-            //     size.x *= 0.5;
-            // }
+            if(name === 'muz'){
+                size.y *= 0.5;
+                size.z *= 0.5;
+            }
 
             // Create a box shape for the model with the actual size of the model
             const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
-
             // Create a body for the model and add the shape to it
             const body = new CANNON.Body({ mass: mass });
-            body.addShape(shape);
-            body.position.copy(model.position);
 
+            let offset = new CANNON.Vec3(0, 0, 0);
+
+            if(name === 'freddy'){
+                offset = new CANNON.Vec3(0 , size.y / 2, 0);
+            }
+            if(name === 'generator'){
+                offset = new CANNON.Vec3(0 , size.y / 2, 0);
+            }
+            if(name === 'fan'){
+                offset = new CANNON.Vec3(0 , size.y / 2, 0);
+            }
+            if(name === 'box'){
+                offset = new CANNON.Vec3(0 , size.y / 1.75, 0);
+            }
+            if(name === 'welding'){
+                offset = new CANNON.Vec3(0 , size.y / 2, 0);
+            }
+            if(name === 'can'){
+                offset = new CANNON.Vec3(0 , size.y / 10, 0);
+            }
+
+            body.addShape(shape, offset);
+            
             // Set the quaternion of the body using the Euler angles of the model
             body.quaternion.setFromEuler(model.rotation.x, model.rotation.y, model.rotation.z);
-
+            body.position.copy(model.position);
             world.addBody(body);
             model.userData.physicsBody = body;
+
             scene.add(model);
 
             // Add the model and its body to the objects object
@@ -236,20 +263,23 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
         });
     });
 }
-
 Promise.all([
-    loadModel('table', 'table/scene.gltf', new THREE.Vector3(0, -15, 10), new THREE.Vector3(0.05, 0.08, 0.08), new THREE.Euler(0,0,0), 0, true, true, false),
+    loadModel('table', 'table/scene.gltf', new THREE.Vector3(0, -15, 10), new THREE.Vector3(0.07, 0.08, 0.08), new THREE.Euler(0,0,0), 0, true, true, false),
     loadModel('lamp', 'oldlamp/scene.gltf', new THREE.Vector3(0, 25, 10), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, Math.PI/2,0), 0, false, false, false),
-    loadModel('bin', 'cop/scene.gltf', new THREE.Vector3(17, -10, 17), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
-    loadModel('bin2', 'cop/scene.gltf', new THREE.Vector3(-17, -10, 17), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
-    loadModel('greenrock', 'greenrock/scene.gltf', new THREE.Vector3(0, 3, 12), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 3, true, true, true),
-    loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI/2, 0, 0), 10, true, true, true),
-    loadModel('box', 'electricbox/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 4, true, true, true),
-    loadModel('fan', 'electricfan/scene.gltf', new THREE.Vector3(-5, 3, 15), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 7, true, true, true),
-    loadModel('sailormoon', 'sailormoon/scene.gltf', new THREE.Vector3(5, 3, 15), new THREE.Vector3(20, 20, 20), new THREE.Euler(0, Math.PI, 0), 1, true, true, true),
-    loadModel('muz', 'banana/scene.gltf', new THREE.Vector3(5, 3, 7), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 0.5, true, true, true),
-    loadModel('freddy', 'fredy/scene.gltf', new THREE.Vector3(0, 3, 7), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, 0, 0), 1, true, true, true),
+    loadModel('bin', 'cop/scene.gltf', new THREE.Vector3(20, -10, 20), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
+    loadModel('bin2', 'cop/scene.gltf', new THREE.Vector3(-20, -10, 20), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
     
+    loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(8, 10, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI/2, 0, 0), 10, true, true, true),
+    loadModel('box', 'electricbox/scene.gltf', new THREE.Vector3(-5, 10, 8), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 4, true, true, true),
+    loadModel('fan', 'electricfan/scene.gltf', new THREE.Vector3(-7, 10, 15), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 7, true, true, true),
+    loadModel('muz', 'banana/scene.gltf', new THREE.Vector3(3, 10, 5), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI / 2, 0, 0), 0.5, true, true, true),
+    loadModel('freddy', 'fredy/scene.gltf', new THREE.Vector3(0, 10, 12), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, 0, 0), 1, true, true, true),
+    loadModel('tank', 'propanetank/scene.gltf', new THREE.Vector3(5, 10, 12), new THREE.Vector3(0.5, 0.5, 0.5), new THREE.Euler(0, 0, 0), 1, true, true, true),
+    loadModel('machine', 'machine/scene.gltf', new THREE.Vector3(10, 10, 12), new THREE.Vector3(0.01, 0.01, 0.01), new THREE.Euler(0, 0, 0), 1, true, true, true),
+    loadModel('welding', 'welding/scene.gltf', new THREE.Vector3(-10, 10, 12), new THREE.Vector3(2, 2, 2), new THREE.Euler(0, 0, 0), 1, true, true, true),
+    loadModel('generator', 'generator/scene.gltf', new THREE.Vector3(-4, 10, 6), new THREE.Vector3(0.6, 0.6, 0.6), new THREE.Euler(0, 0, 0), 1, true, true, true),
+    loadModel('can', 'aliminumcan/scene.gltf', new THREE.Vector3(-12, 10, 6), new THREE.Vector3(0.6, 0.6, 0.6), new THREE.Euler(0, 0, 0), 1, true, true, true),
+
 ]).then(() => {
 
     // algorithms for intersection detection, physics and inspection mode
@@ -288,6 +318,7 @@ Promise.all([
                 offset.copy(intersection).sub(selectedObject.position);
                 selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
             }
+            console.log(selectedObject.id);
         }
 
         lastMouseX = event.clientX;
@@ -297,13 +328,24 @@ Promise.all([
         if (inspectionMode && selectedObject) {
             div2.style.display = 'block';
 
+            // robot
             if(selectedObject.id === 70){
                 textitem1.nodeValue = 'Info about item 1...';
             }
-            if(selectedObject.id === 74){
+            //fan
+            if(selectedObject.id === 78){
                 textitem1.nodeValue = 'Info about item 2...';
             }
-            if(selectedObject.id === 77){
+            //kutu
+            if(selectedObject.id === 73){
+                textitem1.nodeValue = 'Info about item 3...';
+            }
+            //muz
+            if(selectedObject.id === 159){
+                textitem1.nodeValue = 'Info about item 3...';
+            }
+            // freddy
+            if(selectedObject.id === 164){
                 textitem1.nodeValue = 'Info about item 3...';
             }
             // Store the original position and rotation
@@ -731,15 +773,16 @@ window.addEventListener('keydown', (event) =>{
 
 // if objects were put in the bin, increase the point, play a sound effect and update the UI
 function objectRecycled() {
+
     points += 10; 
     pointsText.nodeValue = 'Points: ' + points;
     
+    // I needed to create listener over and over again because it wat
     // sound effect
     const listener = new THREE.AudioListener();
     camera.add(listener);
 
     const sound = new THREE.Audio(listener);
-
     // load a sound and set it as the Audio object's buffer
     const audioLoader = new THREE.AudioLoader();
     audioLoader.load('sounds/yahoo.mp3', function(buffer) {
@@ -765,8 +808,9 @@ function update(){
             if (model) {
                 scene.remove(model);
             }
-            world.removeBody(body);
             objectRecycled();
+            world.removeBody(body);
+
         }
     }
     // clear the list
