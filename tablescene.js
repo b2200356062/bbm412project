@@ -18,21 +18,24 @@ const HEIGHT = window.innerHeight;
 
 // canvas 
 const canvas = document.querySelector('#canvas');
+const context = canvas.getContext('webgl2', { alpha: false});
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 60 , WIDTH / HEIGHT, 0.01, 200);
 camera.position.set(0, 5, 30);
 
 // renders in canvas
-const renderer = new THREE.WebGLRenderer({canvas: canvas, powerPreference: "high-performance"});
+const renderer = new THREE.WebGLRenderer({canvas: canvas, powerPreference: "high-performance", context: context});
 
-// antialias: -40 fps
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setClearColor(0x000000, 1); // arkaplan rengi
 
-// Load the font
+
+
+// in game text for the bins
 let fontloader = new FontLoader();
 fontloader.load('ui/font.json', function(font) {
     // Create a geometry for the text
@@ -131,7 +134,6 @@ div2.style.padding = '50px';
 div2.style.fontFamily = 'monospace'; 
 div2.style.fontSize = '22px';
 var textitem1 = document.createTextNode('Info about item 1...');
-// 70 74 77 objelerin id'si
 var textitem2 = document.createTextNode('Info about item 2...');
 var textitem3 = document.createTextNode('Info about item 3...');
 var textitem4 = document.createTextNode('Info about item 4...');
@@ -156,14 +158,14 @@ brightnessContrastPass.uniforms['contrast'].value = 0 // Reduce contrast
 composer.addPass(brightnessContrastPass);
 
 // adding a depth of field effect for the inspection mode.
-let focusObjectPosition = new THREE.Vector3(0, 9, 0);
+let focusObjectPosition = new THREE.Vector3(0, 20, -1);
 let focusDistance = camera.position.distanceTo(focusObjectPosition);
 let bokehPass = new BokehPass(scene, camera, {
     focus: focusDistance,
     aperture: 0.025,
     maxblur: 0.01,
-    width: WIDTH,
-    height: HEIGHT
+    width: 200,
+    height: 200
 });
 composer.addPass(bokehPass);
 bokehPass.enabled = false;
@@ -241,11 +243,12 @@ Promise.all([
     loadModel('bin', 'cop/scene.gltf', new THREE.Vector3(17, -10, 17), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
     loadModel('bin2', 'cop/scene.gltf', new THREE.Vector3(-17, -10, 17), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
     loadModel('greenrock', 'greenrock/scene.gltf', new THREE.Vector3(0, 3, 12), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 3, true, true, true),
-    loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI/2, 0, 0), 5, true, true, true),
-    loadModel('box', 'electricbox/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 5, true, true, true),
-    loadModel('fan', 'electricfan/scene.gltf', new THREE.Vector3(-5, 3, 15), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true, true),
-    loadModel('sailormoon', 'sailormoon/scene.gltf', new THREE.Vector3(5, 3, 15), new THREE.Vector3(20, 20, 20), new THREE.Euler(0, 0, 0), 5, true, true, true),
-    loadModel('muz', 'banana/scene.gltf', new THREE.Vector3(5, 3, 7), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 5, true, true, true),
+    loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(6, 3, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI/2, 0, 0), 10, true, true, true),
+    loadModel('box', 'electricbox/scene.gltf', new THREE.Vector3(-5, 3, 10), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 4, true, true, true),
+    loadModel('fan', 'electricfan/scene.gltf', new THREE.Vector3(-5, 3, 15), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 7, true, true, true),
+    loadModel('sailormoon', 'sailormoon/scene.gltf', new THREE.Vector3(5, 3, 15), new THREE.Vector3(20, 20, 20), new THREE.Euler(0, Math.PI, 0), 1, true, true, true),
+    loadModel('muz', 'banana/scene.gltf', new THREE.Vector3(5, 3, 7), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 0.5, true, true, true),
+    loadModel('freddy', 'fredy/scene.gltf', new THREE.Vector3(0, 3, 7), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, 0, 0), 1, true, true, true),
     
 ]).then(() => {
 
@@ -293,6 +296,7 @@ Promise.all([
         // if in inspection mode, UI pops up and objects position is updated
         if (inspectionMode && selectedObject) {
             div2.style.display = 'block';
+
             if(selectedObject.id === 70){
                 textitem1.nodeValue = 'Info about item 1...';
             }
