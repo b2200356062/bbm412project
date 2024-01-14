@@ -7,7 +7,6 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { BrightnessContrastShader } from 'three/examples/jsm/shaders/BrightnessContrastShader.js';
-import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
@@ -37,12 +36,12 @@ renderer.setClearColor(0x000000, 1); // arkaplan rengi
 let fontloader = new FontLoader();
 fontloader.load('ui/font.json', function(font) {
     // Create a geometry for the text
-    let geometry = new TextGeometry('Bin', {
+    let geometry = new TextGeometry('STEEL', {
         font: font,
         size: 0.8, // Size of the text
         height: 0.1, // Thickness of the text
     });
-    let geometry2 = new TextGeometry('Bin 2', {
+    let geometry2 = new TextGeometry('ALUMINUM', {
         font: font,
         size: 0.8, // Size of the text
         height: 0.1, // Thickness of the text
@@ -50,11 +49,11 @@ fontloader.load('ui/font.json', function(font) {
 
     let material = new THREE.MeshBasicMaterial({color: 0xffffff}); // White color
     let textMesh = new THREE.Mesh(geometry, material);
-    textMesh.position.set(15, -3, 22);
+    textMesh.position.set(15, 0, 22);
     textMesh.rotation.set(0, -Math.PI/3, 0);
     scene.add(textMesh);
     let textMesh2 = new THREE.Mesh(geometry2, material);
-    textMesh2.position.set(-17, -3, 23);
+    textMesh2.position.set(-17, 0, 26);
     textMesh2.rotation.set(0, Math.PI/3, 0);
     scene.add(textMesh2);
 });
@@ -64,8 +63,8 @@ var div = document.createElement('div');
 div.style.position = 'absolute';
 div.style.top = '40px';
 div.style.left = '10px';
-div.style.width = '250px'; 
-div.style.height = '600px'; 
+div.style.width = '300px'; 
+div.style.height = '700px'; 
 div.style.backgroundImage = 'url(ui/card1/cardx1.png)';
 div.style.backgroundSize = 'cover'; 
 div.style.color = 'white'; 
@@ -73,11 +72,11 @@ div.style.padding = '40px';
 div.style.fontFamily = 'monospace'; 
 div.style.fontSize = '17px';
 var text = document.createTextNode('Drop the objects into their respective bins to recycle them and help space be a cleaner place!');
-var text1 = document.createTextNode('You can use arrow keys to change camera direction');
-var text2 = document.createTextNode('You can use mouse to move objects');
+var text1 = document.createTextNode('You can use arrow keys to change camera direction and WASDQE to move the camera.');
+var text2 = document.createTextNode('You can use mouse to move objects. Becareful with the movement! If you throw the object where you cannot see, you cannot recycle it!');
 var text3 = document.createTextNode('Press F and click on the object you want inspect');
-var text4 = document.createTextNode('In inspection mode you can use mouse to rotate the object');
-var text5 = document.createTextNode('You should put "" objects to "" bins, otherwise you will not get any points!');
+var text4 = document.createTextNode('In inspection mode you can use mouse to rotate the object. After inspecting, use mouse to put it where you want.');
+var text5 = document.createTextNode('You should put the aliminum and steel objects to their respective bins, you can get hints from objects info. Otherwise you will not get any points!');
 var text6 = document.createTextNode('Press T to hide/show the UI - Press H to hide/show the GUI for spotlight');
 var points = 0;
 var pointsText = document.createTextNode('Points: ' + points);
@@ -127,10 +126,10 @@ window.addEventListener('keydown', (event) => {
 // UI for inspection mode
 var div2 = document.createElement('div');
 div2.style.position = 'absolute';
-div2.style.top = '400px';
-div2.style.left = '1250px';
-div2.style.width = '420px'; 
-div2.style.height = '400px'; 
+div2.style.top = '500px';
+div2.style.left = '1400px';
+div2.style.width = '220px'; 
+div2.style.height = '200px'; 
 div2.style.backgroundImage = 'url(ui/card2/card2.png)';
 div2.style.backgroundSize = 'cover'; 
 div2.style.color = 'white'; 
@@ -138,9 +137,6 @@ div2.style.padding = '50px';
 div2.style.fontFamily = 'monospace'; 
 div2.style.fontSize = '22px';
 var textitem1 = document.createTextNode('Info about item 1...');
-var textitem2 = document.createTextNode('Info about item 2...');
-var textitem3 = document.createTextNode('Info about item 3...');
-var textitem4 = document.createTextNode('Info about item 4...');
 div2.appendChild(textitem1);
 document.body.appendChild(div2);
 div2.style.display = 'none';
@@ -160,19 +156,6 @@ var brightnessContrastPass = new ShaderPass(BrightnessContrastShader);
 brightnessContrastPass.uniforms['brightness'].value = 0 // Reduce brightness
 brightnessContrastPass.uniforms['contrast'].value = 0 // Reduce contrast
 composer.addPass(brightnessContrastPass);
-
-// adding a depth of field effect for the inspection mode.
-let focusObjectPosition = new THREE.Vector3(0, 20, -1);
-let focusDistance = camera.position.distanceTo(focusObjectPosition);
-let bokehPass = new BokehPass(scene, camera, {
-    focus: focusDistance,
-    aperture: 0.025,
-    maxblur: 0.01,
-    width: 200,
-    height: 200
-});
-composer.addPass(bokehPass);
-bokehPass.enabled = false;
 
 // load model function
 function loadModel(name, path, position, scale, rotation, mass, castShadow, recieveShadow, interactable) {
@@ -194,6 +177,7 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
             const box = new THREE.Box3().setFromObject(model);
             const size = box.getSize(new THREE.Vector3());
 
+            // little adjustments for the objects
             if (name === 'table') {
                 size.y *= 1.5;
                 size.x *= 0.95;
@@ -217,32 +201,54 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
                 size.z *= 0.5;
             }
 
-            // Create a box shape for the model with the actual size of the model
+            // create a box shape for the model with the actual size of the model
             const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
-            // Create a body for the model and add the shape to it
+            // create a body for the model and add the shape to it
             const body = new CANNON.Body({ mass: mass });
 
+            // offset for models that are not 
             let offset = new CANNON.Vec3(0, 0, 0);
 
             if(name === 'freddy'){
+                body.tag = 'freddy';
                 offset = new CANNON.Vec3(0 , size.y / 2, 0);
             }
             if(name === 'generator'){
+                body.tag = 'generator';
                 offset = new CANNON.Vec3(0 , size.y / 2, 0);
             }
             if(name === 'fan'){
+                body.tag = 'fan';
                 offset = new CANNON.Vec3(0 , size.y / 2, 0);
             }
             if(name === 'box'){
+                body.tag = 'box';
                 offset = new CANNON.Vec3(0 , size.y / 1.75, 0);
             }
             if(name === 'welding'){
+                body.tag = 'welding';
                 offset = new CANNON.Vec3(0 , size.y / 2, 0);
             }
             if(name === 'can'){
+                body.tag = 'can';
                 offset = new CANNON.Vec3(0 , size.y / 10, 0);
             }
+            if(name === 'tank'){
+                body.tag = 'tank';
+            }
+            if(name === 'machine'){
+                body.tag = 'machine';
+            }
+            if(name === 'muz'){
+                body.tag = 'muz';
+            }
+            if(name === 'robot'){
+                body.tag = 'robot';
+            }
+            
+            
 
+            
             body.addShape(shape, offset);
             
             // Set the quaternion of the body using the Euler angles of the model
@@ -264,21 +270,22 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
     });
 }
 Promise.all([
-    loadModel('table', 'table/scene.gltf', new THREE.Vector3(0, -15, 10), new THREE.Vector3(0.07, 0.08, 0.08), new THREE.Euler(0,0,0), 0, true, true, false),
+    // static objects
+    loadModel('table', 'table/scene.gltf', new THREE.Vector3(0, -15, 10), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0,0,0), 0, true, true, false),
     loadModel('lamp', 'oldlamp/scene.gltf', new THREE.Vector3(0, 25, 10), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, Math.PI/2,0), 0, false, false, false),
     loadModel('bin', 'cop/scene.gltf', new THREE.Vector3(20, -10, 20), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
     loadModel('bin2', 'cop/scene.gltf', new THREE.Vector3(-20, -10, 20), new THREE.Vector3(0.08, 0.08, 0.08), new THREE.Euler(0, 0, 0), 0, true, true, false),
-    
-    loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(8, 10, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI/2, 0, 0), 10, true, true, true),
-    loadModel('box', 'electricbox/scene.gltf', new THREE.Vector3(-5, 10, 8), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 4, true, true, true),
-    loadModel('fan', 'electricfan/scene.gltf', new THREE.Vector3(-7, 10, 15), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 7, true, true, true),
-    loadModel('muz', 'banana/scene.gltf', new THREE.Vector3(3, 10, 5), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI / 2, 0, 0), 0.5, true, true, true),
-    loadModel('freddy', 'fredy/scene.gltf', new THREE.Vector3(0, 10, 12), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, 0, 0), 1, true, true, true),
-    loadModel('tank', 'propanetank/scene.gltf', new THREE.Vector3(5, 10, 12), new THREE.Vector3(0.5, 0.5, 0.5), new THREE.Euler(0, 0, 0), 1, true, true, true),
-    loadModel('machine', 'machine/scene.gltf', new THREE.Vector3(10, 10, 12), new THREE.Vector3(0.01, 0.01, 0.01), new THREE.Euler(0, 0, 0), 1, true, true, true),
-    loadModel('welding', 'welding/scene.gltf', new THREE.Vector3(-10, 10, 12), new THREE.Vector3(2, 2, 2), new THREE.Euler(0, 0, 0), 1, true, true, true),
-    loadModel('generator', 'generator/scene.gltf', new THREE.Vector3(-4, 10, 6), new THREE.Vector3(0.6, 0.6, 0.6), new THREE.Euler(0, 0, 0), 1, true, true, true),
-    loadModel('can', 'aliminumcan/scene.gltf', new THREE.Vector3(-12, 10, 6), new THREE.Vector3(0.6, 0.6, 0.6), new THREE.Euler(0, 0, 0), 1, true, true, true),
+    // interactable objects
+    loadModel('robot', 'robot/scene.gltf', new THREE.Vector3(-16, 1, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI/2, 0, 0), 10, true, true, true),
+    loadModel('box', 'electricbox/scene.gltf', new THREE.Vector3(-8, 1, 10), new THREE.Vector3(1.5, 1.5, 1.5), new THREE.Euler(0, 0, 0), 4, true, true, true),
+    loadModel('fan', 'electricfan/scene.gltf', new THREE.Vector3(12, 1, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 7, true, true, true),
+    loadModel('muz', 'banana/scene.gltf', new THREE.Vector3(0, 1, 10), new THREE.Vector3(1, 1, 1), new THREE.Euler(Math.PI / 2, 0, 0), 0.5, true, true, true),
+    loadModel('freddy', 'fredy/scene.gltf', new THREE.Vector3(47, -15, -14), new THREE.Vector3(0.3, 0.3, 0.3), new THREE.Euler(0, -Math.PI/6, 0), 1, true, true, true),
+    loadModel('tank', 'propanetank/scene.gltf', new THREE.Vector3(-4, 1, 10), new THREE.Vector3(0.5, 0.5, 0.5), new THREE.Euler(0, 0, 0), 4, true, true, true),
+    loadModel('machine', 'machine/scene.gltf', new THREE.Vector3(8, 1, 10), new THREE.Vector3(0.01, 0.01, 0.01), new THREE.Euler(0, 0, 0), 6, true, true, true),
+    loadModel('welding', 'welding/scene.gltf', new THREE.Vector3(4, 1, 10), new THREE.Vector3(2, 2, 2), new THREE.Euler(0, 0, 0), 8, true, true, true),
+    loadModel('generator', 'generator/scene.gltf', new THREE.Vector3(16, 1, 10), new THREE.Vector3(0.6, 0.6, 0.6), new THREE.Euler(0, 0, 0), 7, true, true, true),
+    loadModel('can', 'aliminumcan/scene.gltf', new THREE.Vector3(-12, 1, 10), new THREE.Vector3(0.6, 0.6, 0.6), new THREE.Euler(0, 0, 0), 10, true, true, true),
 
 ]).then(() => {
 
@@ -318,7 +325,6 @@ Promise.all([
                 offset.copy(intersection).sub(selectedObject.position);
                 selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
             }
-            console.log(selectedObject.id);
         }
 
         lastMouseX = event.clientX;
@@ -329,37 +335,56 @@ Promise.all([
             div2.style.display = 'block';
 
             // robot
-            if(selectedObject.id === 70){
-                textitem1.nodeValue = 'Info about item 1...';
+            if(selectedObject.id === 65){
+                textitem1.nodeValue = 'An aluminum robot that is used to clean the space station. But now it is broken beyond repair.';
             }
             //fan
-            if(selectedObject.id === 78){
-                textitem1.nodeValue = 'Info about item 2...';
+            if(selectedObject.id === 73){
+                textitem1.nodeValue = 'A steel fan. Old people used it the cool themselves off.';
             }
             //kutu
-            if(selectedObject.id === 73){
-                textitem1.nodeValue = 'Info about item 3...';
+            if(selectedObject.id === 68){
+                textitem1.nodeValue = 'An aliminum box. People put valuable things in them.';
             }
             //muz
-            if(selectedObject.id === 159){
-                textitem1.nodeValue = 'Info about item 3...';
+            if(selectedObject.id === 77){
+                textitem1.nodeValue = 'A synthetic banana in case I get hungry.';
             }
             // freddy
-            if(selectedObject.id === 164){
-                textitem1.nodeValue = 'Info about item 3...';
+            if(selectedObject.id === 82){
+                textitem1.nodeValue = 'Plush of the Freddy Fazbear. It is a nice companion to have in space.';
             }
+            // aliminum can
+            if(selectedObject.id === 150){
+                textitem1.nodeValue = 'An aluminum can of several objects.';
+            }
+            //welding
+            if(selectedObject.id === 140){
+                textitem1.nodeValue = 'A mini steel welding machine. It is used to weld small objects.';
+            }
+            //generator
+            if(selectedObject.id === 145){
+                textitem1.nodeValue = 'A mini steel generator. It is used to generate electricity for lights in the space stations..';
+            }
+            //tank
+            if(selectedObject.id === 132){
+                textitem1.nodeValue = 'An aluminum gas tank. Old people used it to cook their meals. These days they are not used anymore.';
+            }
+            //makine
+            if(selectedObject.id === 135){
+                textitem1.nodeValue = 'A steel part of a space ship. It is used to generate power for thrusters.';
+            }
+        
             // Store the original position and rotation
             originalPosition.copy(selectedObject.position);
             originalRotation.copy(selectedObject.rotation);
     
             // Move the selected object to the center of the screen and a little bit closer to the camera
-            selectedObject.position.set(0, 5, 15);
+            selectedObject.position.set(0, 5, 10);
             selectedObject.userData.physicsBody.position.copy(selectedObject.position); // Update the physics body's position
     
             // Disable physics
             selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
-            // enables the depth of field effect
-            bokehPass.enabled = true;
         }
 
 
@@ -417,10 +442,6 @@ Promise.all([
         if(event.key === 'f' || event.key === 'F'){
             inspectionMode = !inspectionMode;
 
-            if(!inspectionMode){
-                // Disable bokeh pass when not in inspection mode
-                bokehPass.enabled = false;
-            }
             if (inspectionMode && selectedObject) {
                 // Store the original position and rotation
                 originalPosition = selectedObject.position.clone();
@@ -457,21 +478,31 @@ Promise.all([
     }, false);
 
     // collision detection for the objects and the bins
+    // this is for the steel bin.
     binBody.addEventListener("collide", function(event) {
        let otherBody = event.body;
-        // Check if the body has already been added to the list
-        if (!bodiesToRemove.includes(otherBody)) {
-            // Add the body to the list of bodies to be removed
+        if (!bodiesToRemove.includes(otherBody)) {-
             bodiesToRemove.push(otherBody);
+            if (otherBody.tag === 'fan'|| otherBody.tag === 'generator' || otherBody.tag === 'welding' || otherBody.tag === 'machine') {
+                // Increase the points and update the UI
+                objectRecycled();
+            }
+            else{
+                wrongObject();
+            }
         }
     });
-
+    // this is for the aluminum bin.
     binBody2.addEventListener("collide", function(event) {
         let otherBody = event.body;
-         // Check if the body has already been added to the list
          if (!bodiesToRemove.includes(otherBody)) {
-             // Add the body to the list of bodies to be removed
-             bodiesToRemove.push(otherBody);
+            bodiesToRemove.push(otherBody);
+            if (otherBody.tag === 'box'|| otherBody.tag === 'robot' || otherBody.tag === 'can' || otherBody.tag === 'tank') {
+                objectRecycled();
+            }
+            else{
+                wrongObject();
+            }
          }
      });
     
@@ -481,8 +512,7 @@ Promise.all([
 var textureLoader = new THREE.TextureLoader().setPath('textures/');
 
 // front wall
-textureLoader.load('texttable.png', function(texture) {
-    // Create the geometry and material
+textureLoader.load('walltext.png', function(texture) {
 
     var geometry = new THREE.PlaneGeometry(100, 50);
     var material = new THREE.MeshStandardMaterial({ map: texture });
@@ -570,14 +600,14 @@ textureLoader.load('floortext.jpg', function(texture) {
 });
 
 // ceiling texture
-textureLoader.load('ceilingtext.png', function(texture) {
+textureLoader.load('walltext.png', function(texture) {
 
-    var geometry = new THREE.PlaneGeometry(80, 40); 
+    var geometry = new THREE.PlaneGeometry(100, 100); 
     var material = new THREE.MeshStandardMaterial({ map: texture });
 
     var ceiling = new THREE.Mesh(geometry, material);
     ceiling.rotation.set(Math.PI / 2, 0, 0);
-    ceiling.position.set(0, 35, 10); 
+    ceiling.position.set(0, 30, 0); 
     scene.add(ceiling);
 });
 
@@ -589,7 +619,6 @@ spotlight.target.position.set(0, 0, 10);
 //spotlight.castShadow = true;
 scene.add(spotlight);
 const spotlighthelper = new THREE.SpotLightHelper( spotlight );
-//scene.add( spotlighthelper );
 
 // ambient light
 const ambientlight = new THREE.AmbientLight(0xffffff, 2);
@@ -606,7 +635,7 @@ const directionallight = new THREE.DirectionalLight(0xffffff, 3);
 directionallight.position.set(0, 24, 0);
 directionallight.castShadow = true;
 
-// Adjust the shadow camera's frustum
+// shadow camera adjustments
 directionallight.shadow.camera.left = -50; 
 directionallight.shadow.camera.right = 50; 
 directionallight.shadow.camera.top = 50; 
@@ -615,10 +644,6 @@ directionallight.shadow.camera.near = 0.01;
 directionallight.shadow.camera.far = 50;
 directionallight.shadow.mapSize.width = 1024; 
 directionallight.shadow.mapSize.height = 1024;
-//const shadowCameraHelper = new THREE.CameraHelper(directionallight.shadow.camera);
-//scene.add(shadowCameraHelper);
-//const directionallighthelper = new THREE.DirectionalLightHelper( directionallight, 20, 0xff0000);
-//scene.add( directionallighthelper );
 scene.add(directionallight);
 
 // GUI FOR LIGHTS 
@@ -716,7 +741,7 @@ window.addEventListener('keydown', (event) =>{
             camera.position.x += 5;
             break;
         case 'KeyW':
-            if(camera.position.z < -25){
+            if(camera.position.z <= 25){
                 break;
             }
             camera.position.z -= 5;
@@ -773,19 +798,32 @@ window.addEventListener('keydown', (event) =>{
 
 // if objects were put in the bin, increase the point, play a sound effect and update the UI
 function objectRecycled() {
-
     points += 10; 
     pointsText.nodeValue = 'Points: ' + points;
     
-    // I needed to create listener over and over again because it wat
+    // I needed to create listener over and over again because it was getting blocked by audio policy of browsers.
     // sound effect
-    const listener = new THREE.AudioListener();
+    let listener = new THREE.AudioListener();
     camera.add(listener);
+    let sound = new THREE.Audio(listener);
 
-    const sound = new THREE.Audio(listener);
-    // load a sound and set it as the Audio object's buffer
-    const audioLoader = new THREE.AudioLoader();
+    let audioLoader = new THREE.AudioLoader();
     audioLoader.load('sounds/yahoo.mp3', function(buffer) {
+        sound.setBuffer(buffer);
+        sound.setVolume(0.7);
+        sound.play();
+    });
+}
+function wrongObject() {
+    points -= 10; 
+    pointsText.nodeValue = 'Points: ' + points;
+
+    let listener = new THREE.AudioListener();
+    camera.add(listener);
+    let sound = new THREE.Audio(listener);
+
+    let audioLoader = new THREE.AudioLoader();
+    audioLoader.load('sounds/wrong.mp3', function(buffer) {
         sound.setBuffer(buffer);
         sound.setVolume(0.7);
         sound.play();
@@ -808,9 +846,7 @@ function update(){
             if (model) {
                 scene.remove(model);
             }
-            objectRecycled();
             world.removeBody(body);
-
         }
     }
     // clear the list

@@ -12,20 +12,22 @@ let modelsLoaded = false;
 let currentScene = 'table'; // Set the initial scene
 
 let { render: tableRender, update: tableUpdate, scene: tableSceneObj, camera: tableCamera, gui } = tableScene(renderer);
-let { render: spaceRender, update: spaceUpdate, scene: spaceSceneObj, camera: spaceCamera, earthloader, sunloader } = spaceScene(renderer);
+//let { render: spaceRender, update: spaceUpdate, scene: spaceSceneObj, camera: spaceCamera, earthloader, sunloader } = spaceScene(renderer);
 
 let scenes = {
     'table': { render: tableRender, update: tableUpdate, scene: tableSceneObj, camera: tableCamera },
-    'space': { render: spaceRender, update: spaceUpdate, scene: spaceSceneObj, camera: spaceCamera}
+    //'space': { render: spaceRender, update: spaceUpdate, scene: spaceSceneObj, camera: spaceCamera}
 };
 
 
-Promise.all([earthloader, sunloader]).then(() => {
-    requestAnimationFrame(render);
-    modelsLoaded = true;
-}).catch((error) => {
-    console.error('An error occurred while loading the models:', error);
-});
+// Promise.all([earthloader, sunloader]).then(() => {
+    
+//     modelsLoaded = true;
+// }).catch((error) => {
+//     console.error('An error occurred while loading the models:', error);
+// });
+
+requestAnimationFrame(render);
 
 function switchScene(sceneName) {
     // Check if the scene exists
