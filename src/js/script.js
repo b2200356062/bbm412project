@@ -11,6 +11,7 @@ import Stats from "three/addons/libs/stats.module.js";
 
 // todo: add ui for speed and tuş atamaları
 // todo: add oscillation animation for low speed turns and tedious movements
+// todo: rotate the ship around the world
 
 // 26.12.23: key bindings for speedUp/slowDown/up/down changed
 
@@ -65,11 +66,14 @@ const camera = new THREE.PerspectiveCamera(
 var cameraControls = new PointerLockControls(camera, renderer.domElement);
 
 const assetLoader = new GLTFLoader();
-
 var spaceship, spaceshipBox;
 loadModel("spaceship", shipUrl.href, new THREE.Vector3(0, 5, 0), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, -1 * Math.PI, 0), 5, true, true);
 var debris1, debris1Box;
-//loadModel("debris1", debris1Url.href, new THREE.Vector3(0, 5, -500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true);
+loadModel("debris1", debris1Url.href, new THREE.Vector3(0, 5, -500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true, "junk");
+var debris2, debris2Box;
+loadModel("debris2", debris1Url.href, new THREE.Vector3(-25, 30, -750), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true, "junk");
+var debris3, debris3Box;
+loadModel("debris3", debris1Url.href, new THREE.Vector3(25, -50, -1000), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true, "junk");
 var earth, earthBox;
 loadModel("earth", earthUrl.href, new THREE.Vector3(3400, 2, -750), new THREE.Vector3(20, 20, 20), new THREE.Euler(0, 0, 0), 10000, true, true);
 var sun, sunBox;
@@ -166,16 +170,19 @@ renderer.setClearColor(0x060d13); // dark blue for space
 function animate(time) {
     if (!controls.pause) {
         world.step(timeStep);
-
+        selectObjects();
 
         if (spaceship) {
             //console.log("spaceshipBox.quaternion");
-            console.log(controls.totalRotation);
+            //console.log(controls.totalRotation);
             spaceshipMovement();
             spaceship.position.copy(spaceshipBox.position);
             //spaceship.quaternion.copy(spaceshipBox.quaternion);
         }
-        if (debris1) {
+        if (debris1 && debris2 && debris3) {
+            debris1.object.name = "junk1";
+            debris2.object.name = "junk2";
+            debris3.object.name = "junk3";
             debris1.position.copy(debris1Box.position);
             debris1.quaternion.copy(debris1Box.quaternion);
         }
@@ -187,6 +194,8 @@ function animate(time) {
 renderer.setAnimationLoop(animate);
 
 function spaceshipMovement() {
+    //console.log(spaceshipBox.velocity);
+    //spaceshipBox.position.x -= spaceshipBox.velocity.z * 0.001;
 
     rightPLight.position.set(spaceship.position.x -4, spaceship.position.y, spaceship.position.z+7);
     leftPLight.position.set(spaceship.position.x +4, spaceship.position.y, spaceship.position.z+7);
@@ -199,6 +208,8 @@ function spaceshipMovement() {
 
     // animation + control panel
     if (controls.speedUp) {
+        spaceshipBox.velocity.y = 0;
+        spaceshipBox.velocity.x = 0;
         if (controls.speed >= controls.maxSpeed/2) {
             leftPLight.power += 1;
             rightPLight.power += 1;
@@ -210,6 +221,8 @@ function spaceshipMovement() {
         }
     }
     if (controls.slowDown) {
+        spaceshipBox.velocity.y = 0;
+        spaceshipBox.velocity.x = 0;
         if (controls.speed > controls.minSpeed) {
             leftPLight.power -= 1;
             rightPLight.power -= 1;
@@ -217,27 +230,25 @@ function spaceshipMovement() {
         }
     }
 
-    let rotationSpeed = 0.01;
-    let quaternion = new CANNON.Quaternion();
+    // let rotationSpeed = 0.01;
+    // let quaternion = new CANNON.Quaternion();
     if (controls.up && controls.totalRotation.x > -30) {
-        spaceshipBox.velocity.y += 0.5;
+        spaceshipBox.velocity.y -= 0.01 * spaceshipBox.velocity.z;
         spaceship.rotation.x += Math.PI/180;
         spaceshipBox.quaternion.copy(spaceship.quaternion);
         spaceship.quaternion.copy(spaceshipBox.quaternion);
-        // quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), -rotationSpeed);
-        // spaceshipBox.quaternion = spaceshipBox.quaternion.mult(quaternion);
         controls.totalRotation.x -= 1;
     } else {
-        spaceshipBox.velocity.y = 0;
+        //spaceshipBox.velocity.y = 0;
     }
     if (controls.down && controls.totalRotation.x < 30) {
-        spaceshipBox.velocity.y -= 0.5;
+        spaceshipBox.velocity.y += 0.01 * spaceshipBox.velocity.z;
         spaceship.rotation.x -= Math.PI/180;
         spaceshipBox.quaternion.copy(spaceship.quaternion);
         spaceship.quaternion.copy(spaceshipBox.quaternion);
         controls.totalRotation.x += 1;
     } else {
-        spaceshipBox.velocity.y = 0;
+        //spaceshipBox.velocity.y = 0;
     }
     if (!controls.down && !controls.up && controls.totalRotation.x !== 0) {
         if (controls.totalRotation.x > 0) {
@@ -270,22 +281,22 @@ function spaceshipMovement() {
     }
 
     if (controls.left && controls.totalRotation.z > -30) {
-        spaceshipBox.velocity.x -= 0.5;
+        spaceshipBox.velocity.x += 0.01 * spaceshipBox.velocity.z;
         spaceship.rotation.z -= Math.PI/450 + 0.01;
         spaceshipBox.quaternion.copy(spaceship.quaternion);
         spaceship.quaternion.copy(spaceshipBox.quaternion);
         controls.totalRotation.z -= 1;
     } else {
-        spaceshipBox.velocity.x = 0;
+        //spaceshipBox.velocity.x = 0;
     }
     if (controls.right && controls.totalRotation.z < 30) {
-        spaceshipBox.velocity.x += 0.5;
+        spaceshipBox.velocity.x -= 0.01 * spaceshipBox.velocity.z;
         spaceship.rotation.z += Math.PI/450 + 0.01;
         spaceshipBox.quaternion.copy(spaceship.quaternion);
         spaceship.quaternion.copy(spaceshipBox.quaternion);
         controls.totalRotation.z += 1;
     } else {
-        spaceshipBox.velocity.x = 0;
+        //spaceshipBox.velocity.x = 0;
     }
     spaceshipBox.quaternion.y = 1;
 }
@@ -304,6 +315,53 @@ window.addEventListener('resize', function () {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+
+const pointer = new THREE.Vector2();
+const clicker = new THREE.Vector2();
+const collectable = [];
+const raycaster = new THREE.Raycaster();
+function onMouseMove(event) {
+    pointer.x = (event.clientX / window.innerWidth) * 2-1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2+1;
+}
+window.addEventListener('mousemove', onMouseMove, false);
+window.addEventListener('click', event => {
+    clicker.x = (event.clientX / window.innerWidth) * 2-1;
+    clicker.y = -(event.clientY / window.innerHeight) * 2+1;
+    raycaster.setFromCamera(clicker, camera);
+    const intersects = raycaster.intersectObjects(scene.children);
+    if (intersects.length > 0) {
+        if (intersects[0].object.name.startsWith("Object_2")) {
+            scene.remove(intersects[0]);
+        }
+    }
+});
+
+var childArray = [];
+const markerLight = new THREE.PointLight(0xff0000, 40);
+scene.add(markerLight);
+function selectObjects() {
+    raycaster.setFromCamera(pointer, camera);
+    const intersects = raycaster.intersectObjects(scene.children);
+    //console.log(intersects);
+
+    if (intersects.length > 0) {
+        if (intersects[0].object.name.startsWith("Object_2")) {
+            childArray.push(intersects[0])
+
+            intersects[0].object.material.transparent = true;
+            intersects[0].object.material.opacity = 0.5;
+        }
+    } else if (childArray.length > 0) {
+        while (childArray.length > 0) {
+            childArray[0].object.material.opacity = 1;
+            childArray[0].transparent = false;
+            childArray.shift();
+        }
+
+    }
+}
 
 
 // event listener for character controls
@@ -358,7 +416,7 @@ window.addEventListener('keyup', function (e) {
 });
 
 // load obj
-function loadModel(modelName, path, position, scale, rotation, mass, castShadow, receiveShadow) {
+function loadModel(modelName, path, position, scale, rotation, mass, castShadow, receiveShadow, name ="") {
     let body, model;
     assetLoader.load(path, function (gltf) {
         model = gltf.scene;
@@ -388,23 +446,29 @@ function loadModel(modelName, path, position, scale, rotation, mass, castShadow,
         if (modelName == "spaceship") {
             spaceship = model;
             spaceshipBox = body;
+            spaceship.tag = "spaceship";
             spaceshipBox.angularDamping = 1;
             spaceshipBox.velocity = new CANNON.Vec3(0, 0, -25);
         }
-        else if (modelName == "earth") {
-            earth = model;
-            earthBox = body;
-        }
-        else if (modelName == "moon") {
-            moon = model;
-            moonBox = body;
-        }
+
         else if (modelName == "sun") {
             sun = model;
             sunBox = body;
+            sun.tag = "sun";
             const dlight = new THREE.DirectionalLight(0xffffff, 15);
             dlight.position.set(model.position.x,model.position.y,model.position.z);
             scene.add(dlight);
+        }
+        // i can't believe this code actually worked
+        // what it does is, if the object doesn't need any speciality, it assigns the model and body to the model
+        else {
+            if (window[modelName]) {
+                window[modelName] = model;
+                window[modelName].tag = name;
+            }
+            if (window[modelName + "Box"]) {
+                window[modelName + "Box"] = body;
+            }
         }
     }, undefined, function (error) {
         console.error(error);
@@ -456,7 +520,7 @@ function generateSpaceJunk() {
 
             junkPositions.splice(index, 1);
             currentJunkCount -= 1;
-            console.log(currentJunkCount);
+            //console.log(currentJunkCount);
         }
     }
 
