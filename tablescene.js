@@ -211,44 +211,51 @@ function loadModel(name, path, position, scale, rotation, mass, castShadow, reci
 
             if(name === 'freddy'){
                 body.tag = 'freddy';
+                model.tag = 'freddy';
                 offset = new CANNON.Vec3(0 , size.y / 2, 0);
             }
             if(name === 'generator'){
                 body.tag = 'generator';
+                model.tag = 'generator';    
                 offset = new CANNON.Vec3(0 , size.y / 2, 0);
             }
             if(name === 'fan'){
                 body.tag = 'fan';
+                model.tag = 'fan';
                 offset = new CANNON.Vec3(0 , size.y / 2, 0);
             }
             if(name === 'box'){
                 body.tag = 'box';
+                model.tag = 'box';
                 offset = new CANNON.Vec3(0 , size.y / 1.75, 0);
             }
             if(name === 'welding'){
                 body.tag = 'welding';
+                model.tag = 'welding';
                 offset = new CANNON.Vec3(0 , size.y / 2, 0);
             }
             if(name === 'can'){
                 body.tag = 'can';
+                model.tag = 'can';
                 offset = new CANNON.Vec3(0 , size.y / 10, 0);
             }
             if(name === 'tank'){
+                model.tag = 'tank';
                 body.tag = 'tank';
             }
             if(name === 'machine'){
+                model.tag = 'machine';
                 body.tag = 'machine';
             }
             if(name === 'muz'){
+                model.tag = 'muz';
                 body.tag = 'muz';
             }
             if(name === 'robot'){
+                model.tag = 'robot';
                 body.tag = 'robot';
             }
-            
-            
-
-            
+        
             body.addShape(shape, offset);
             
             // Set the quaternion of the body using the Euler angles of the model
@@ -335,43 +342,43 @@ Promise.all([
             div2.style.display = 'block';
 
             // robot
-            if(selectedObject.id === 65){
+            if(selectedObject.tag === 'robot'){
                 textitem1.nodeValue = 'An aluminum robot that is used to clean the space station. But now it is broken beyond repair.';
             }
             //fan
-            if(selectedObject.id === 73){
+            if(selectedObject.tag === 'fan'){
                 textitem1.nodeValue = 'A steel fan. Old people used it the cool themselves off.';
             }
             //kutu
-            if(selectedObject.id === 68){
+            if(selectedObject.tag === 'box'){
                 textitem1.nodeValue = 'An aliminum box. People put valuable things in them.';
             }
             //muz
-            if(selectedObject.id === 77){
+            if(selectedObject.tag === 'muz'){
                 textitem1.nodeValue = 'A synthetic banana in case I get hungry.';
             }
             // freddy
-            if(selectedObject.id === 82){
+            if(selectedObject.tag === 'freddy'){
                 textitem1.nodeValue = 'Plush of the Freddy Fazbear. It is a nice companion to have in space.';
             }
             // aliminum can
-            if(selectedObject.id === 150){
+            if(selectedObject.tag === 'can'){
                 textitem1.nodeValue = 'An aluminum can of several objects.';
             }
             //welding
-            if(selectedObject.id === 140){
+            if(selectedObject.tag === 'welding'){
                 textitem1.nodeValue = 'A mini steel welding machine. It is used to weld small objects.';
             }
             //generator
-            if(selectedObject.id === 145){
+            if(selectedObject.tag === 'generator'){
                 textitem1.nodeValue = 'A mini steel generator. It is used to generate electricity for lights in the space stations..';
             }
             //tank
-            if(selectedObject.id === 132){
+            if(selectedObject.tag === 'tank'){
                 textitem1.nodeValue = 'An aluminum gas tank. Old people used it to cook their meals. These days they are not used anymore.';
             }
-            //makine
-            if(selectedObject.id === 135){
+            //machine
+            if(selectedObject.tag === 'machine'){
                 textitem1.nodeValue = 'A steel part of a space ship. It is used to generate power for thrusters.';
             }
         
