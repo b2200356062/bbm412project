@@ -4,9 +4,12 @@ import * as CANNON from 'cannon-es';
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {randFloatSpread} from "three/src/math/MathUtils";
 import {clone} from "three/addons/utils/SkeletonUtils";
+import {OutlinePass} from "three/examples/jsm/postprocessing/OutlinePass.js";
+import {FXAAShader} from "three/examples/jsm/shaders/FXAAShader.js";
 import {Mesh, MeshBasicMaterial, TextureLoader} from "three";
 import {PointerLockControls} from "three/addons/controls/PointerLockControls.js";
 import Stats from "three/addons/libs/stats.module.js";
+import {EffectComposer, RenderPass, ShaderPass} from "three/addons";
 //import {World} from 'cannon-es'
 
 // todo: add ui for speed and tuş atamaları
@@ -69,11 +72,11 @@ const assetLoader = new GLTFLoader();
 var spaceship, spaceshipBox;
 loadModel("spaceship", shipUrl.href, new THREE.Vector3(0, 5, 0), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, -1 * Math.PI, 0), 5, true, true);
 var debris1, debris1Box;
-loadModel("debris1", debris1Url.href, new THREE.Vector3(0, 5, -500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true, "junk");
+loadModel("debris1", debris1Url.href, new THREE.Vector3(0, 5, -500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true, true);
 var debris2, debris2Box;
-loadModel("debris2", debris1Url.href, new THREE.Vector3(-25, 30, -750), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true, "junk");
+loadModel("debris2", debris1Url.href, new THREE.Vector3(-25, 30, -750), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true, true);
 var debris3, debris3Box;
-loadModel("debris3", debris1Url.href, new THREE.Vector3(25, -50, -1000), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true, "junk");
+loadModel("debris3", debris1Url.href, new THREE.Vector3(25, -50, -1000), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true, false);
 var earth, earthBox;
 loadModel("earth", earthUrl.href, new THREE.Vector3(3400, 2, -750), new THREE.Vector3(20, 20, 20), new THREE.Euler(0, 0, 0), 10000, true, true);
 var sun, sunBox;
@@ -170,7 +173,8 @@ renderer.setClearColor(0x060d13); // dark blue for space
 function animate(time) {
     if (!controls.pause) {
         world.step(timeStep);
-        selectObjects();
+        console.log(collectableItems);
+        //selectObjects();
 
         if (spaceship) {
             //console.log("spaceshipBox.quaternion");
@@ -180,9 +184,6 @@ function animate(time) {
             //spaceship.quaternion.copy(spaceshipBox.quaternion);
         }
         if (debris1 && debris2 && debris3) {
-            debris1.object.name = "junk1";
-            debris2.object.name = "junk2";
-            debris3.object.name = "junk3";
             debris1.position.copy(debris1Box.position);
             debris1.quaternion.copy(debris1Box.quaternion);
         }
@@ -316,51 +317,80 @@ window.addEventListener('resize', function () {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+//
+// const pointer = new THREE.Vector2();
+// const clicker = new THREE.Vector2();
+// const collectedItems = [];
+// const raycaster = new THREE.Raycaster();
+// function onMouseMove(event) {
+//     pointer.x = (event.clientX / window.innerWidth) * 2-1;
+//     pointer.y = -(event.clientY / window.innerHeight) * 2+1;
+// }
+// window.addEventListener('mousemove', onMouseMove, false);
+// window.addEventListener('click', event => {
+//     clicker.x = (event.clientX / window.innerWidth) * 2-1;
+//     clicker.y = -(event.clientY / window.innerHeight) * 2+1;
+//     raycaster.setFromCamera(clicker, camera);
+//     const intersects = raycaster.intersectObjects(scene.children);
+//     if (intersects.length > 0) {
+//         if (intersects[0].object.name.startsWith("Object_2")) {
+//             collectedItems.push(intersects[0]);
+//             console.log(intersects);
+//         }
+//     }
+// });
 
-const pointer = new THREE.Vector2();
-const clicker = new THREE.Vector2();
-const collectable = [];
-const raycaster = new THREE.Raycaster();
-function onMouseMove(event) {
-    pointer.x = (event.clientX / window.innerWidth) * 2-1;
-    pointer.y = -(event.clientY / window.innerHeight) * 2+1;
-}
-window.addEventListener('mousemove', onMouseMove, false);
-window.addEventListener('click', event => {
-    clicker.x = (event.clientX / window.innerWidth) * 2-1;
-    clicker.y = -(event.clientY / window.innerHeight) * 2+1;
-    raycaster.setFromCamera(clicker, camera);
-    const intersects = raycaster.intersectObjects(scene.children);
-    if (intersects.length > 0) {
-        if (intersects[0].object.name.startsWith("Object_2")) {
-            scene.remove(intersects[0]);
-        }
-    }
-});
+//var childArray = [];
 
-var childArray = [];
-const markerLight = new THREE.PointLight(0xff0000, 40);
-scene.add(markerLight);
+// // i always wanted to write +20 lines of code for a simple outline effect
+// const composer = new EffectComposer(renderer);
+// const renderPass = new RenderPass(scene, camera);
+// composer.addPass(renderPass);
+
+// const outliner = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
+// outliner.edgeThickness = 2.0;
+// outliner.edgeStrength = 3.0;
+// outliner.visibleEdgeColor.set(0xfffba2); // try 255, 251, 162
+// composer.addPass(outliner);
+//
+// const textureLoader = new THREE.TextureLoader();
+// textureLoader.load("./three.js-master/examples/textures/tri_pattern.jpg", function (texture) {
+//     if (texture) {
+//         outliner.patternTexture = texture;
+//         texture.wrapS = THREE.RepeatWrapping;
+//         texture.wrapT = THREE.RepeatWrapping;
+//     }
+//     else {
+//         console.log("Texture does not exist!");
+//     }
+// })
+
+// const fxaaShader = new ShaderPass(FXAAShader);
+// fxaaShader.uniforms["resolution"].value.set(1/window.innerWidth, 1/window.innerHeight);
+// composer.addPass(fxaaShader);
+
 function selectObjects() {
-    raycaster.setFromCamera(pointer, camera);
-    const intersects = raycaster.intersectObjects(scene.children);
-    //console.log(intersects);
-
-    if (intersects.length > 0) {
-        if (intersects[0].object.name.startsWith("Object_2")) {
-            childArray.push(intersects[0])
-
-            intersects[0].object.material.transparent = true;
-            intersects[0].object.material.opacity = 0.5;
-        }
-    } else if (childArray.length > 0) {
-        while (childArray.length > 0) {
-            childArray[0].object.material.opacity = 1;
-            childArray[0].transparent = false;
-            childArray.shift();
-        }
-
-    }
+    // raycaster.setFromCamera(pointer, camera);
+    // const intersects = raycaster.intersectObjects(scene.children);
+    // //console.log(intersects);
+    //
+    // if (intersects.length > 0) {
+    //     if (intersects[0].object.name.startsWith("Object_2")) {
+    //         childArray.push(intersects[0])
+    //
+    //         outliner.selectedObjects.push(intersects[0]);
+    //         intersects[0].object.material.transparent = true;
+    //         intersects[0].object.material.opacity = 0.5;
+    //     }
+    // } else if (childArray.length > 0) {
+    //     while (childArray.length > 0) {
+    //         childArray[0].object.material.opacity = 1;
+    //         childArray[0].transparent = false;
+    //         childArray.shift();
+    //         //outliner.selectedObjects.shift();
+    //     }
+    //
+    // }
 }
 
 
@@ -415,8 +445,9 @@ window.addEventListener('keyup', function (e) {
     }
 });
 
-// load obj
-function loadModel(modelName, path, position, scale, rotation, mass, castShadow, receiveShadow, name ="") {
+// load obj, takes these parameters and id there is a variable with modelname and modelnameBox assigns object and collision box to them
+var collectableItems = [];
+function loadModel(modelName, path, position, scale, rotation, mass, castShadow, receiveShadow, isCollectable=false) {
     let body, model;
     assetLoader.load(path, function (gltf) {
         model = gltf.scene;
@@ -446,7 +477,7 @@ function loadModel(modelName, path, position, scale, rotation, mass, castShadow,
         if (modelName == "spaceship") {
             spaceship = model;
             spaceshipBox = body;
-            spaceship.tag = "spaceship";
+            //spaceship.tag = "spaceship";
             spaceshipBox.angularDamping = 1;
             spaceshipBox.velocity = new CANNON.Vec3(0, 0, -25);
         }
@@ -454,7 +485,7 @@ function loadModel(modelName, path, position, scale, rotation, mass, castShadow,
         else if (modelName == "sun") {
             sun = model;
             sunBox = body;
-            sun.tag = "sun";
+            //sun.tag = "sun";
             const dlight = new THREE.DirectionalLight(0xffffff, 15);
             dlight.position.set(model.position.x,model.position.y,model.position.z);
             scene.add(dlight);
@@ -464,11 +495,14 @@ function loadModel(modelName, path, position, scale, rotation, mass, castShadow,
         else {
             if (window[modelName]) {
                 window[modelName] = model;
-                window[modelName].tag = name;
+                //window[modelName].tag = name;
             }
             if (window[modelName + "Box"]) {
                 window[modelName + "Box"] = body;
             }
+        }
+        if (isCollectable) {
+            collectableItems.push({model, body});
         }
     }, undefined, function (error) {
         console.error(error);
