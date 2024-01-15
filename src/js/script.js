@@ -82,7 +82,7 @@ loadModel("earth", earthUrl.href, new THREE.Vector3(3400, 2, -750), new THREE.Ve
 var sun, sunBox;
 loadModel("sun", sunUrl.href, new THREE.Vector3(-1000, 200, -1500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 10000, true, true);
 var moon, moonBox;
-loadModel("moon", moonUrl.href, new THREE.Vector3(0, -200, 900), new THREE.Vector3(200, 200, 200), new THREE.Euler(0, 0, 0), 100000, true, true);
+loadModel("moon", moonUrl.href, new THREE.Vector3(0, -200, 900), new THREE.Vector3(400, 400, 400), new THREE.Euler(0, 0, 0), 100000, true, true);
 
 // star background
 const stars = new Array(0);
@@ -172,7 +172,7 @@ renderer.setClearColor(0x060d13); // dark blue for space
 function animate(time) {
     if (!controls.pause) {
         world.step(timeStep);
-        console.log(collectableItems);
+        update();
 
         if (spaceship) {
             spaceshipMovement();
@@ -419,6 +419,14 @@ function loadModel(modelName, path, position, scale, rotation, mass, castShadow,
             dlight.position.set(model.position.x,model.position.y,model.position.z);
             scene.add(dlight);
         }
+        else if (modelName == "earth") {
+            earth = model;
+            earthBox = body;
+        }
+        else if (modelName == "moon") {
+            moon = model;
+            moonBox = body;
+        }
         // i can't believe this code actually worked
         // what it does is, if the object doesn't need any speciality, it assigns the model and body to the model
         else {
@@ -563,22 +571,31 @@ function generateSpaceJunk() {
 let mixer;
 let moonTheta = 0;
 function update() {
-    controls.update(); // mouse update
+    //controls.update(); // mouse update
+    console.log("turning both");
 
     if (mixer) {
         mixer.update(0.01);
     }
     if (earth) {
-        earth.rotation.y += 0.2;
+        console.log("turning earth");
+        earthBox.angularVelocity.set(0, 0.02, 0);
+        earth.quaternion.copy(earthBox.quaternion);
     }
 
-    if (moon) {
-        moon.rotation.y += 0.2;
+    if (moon && earth) {
+        console.log("turning moon");
+
+        moonBox.angularVelocity.set(0, 0.02, 0)
         moonTheta += 0.001;
         const s = Math.sin(moonTheta);
         const c = Math.cos(moonTheta);
-        moon.position.x = 20 * (c - s);
-        moon.position.z = 20 * (s + c);
+        moonBox.position.x = 20 * (c - s) - earth.position.x/2;
+        moonBox.position.z = 20 * (s + c) - earth.position.z/2;
+        moonBox.position.y = -600;
+
+        moon.quaternion.copy(moonBox.quaternion);
+        moon.position.copy(moonBox.position);
     }
 }
 function generateRandPos(rangeX, rangeY, rangeZ) {
