@@ -118,6 +118,7 @@ generateSpaceJunk();
 
 // spaceship controls
 const controls = {
+    collectableRadius: 150,
     speedUp: false,
     slowDown: false,
     left: false,
@@ -156,8 +157,6 @@ scene.add(leftPLight);
 // scene.add(rPLightHelper);
 // scene.add(lPLightHelper);
 
-// rightPLight.position.set(-5,0,0);
-// leftPLight.position.set(5,0,0);
 
 const options = {
     lightIntensity: 0.5,
@@ -174,14 +173,10 @@ function animate(time) {
     if (!controls.pause) {
         world.step(timeStep);
         console.log(collectableItems);
-        //selectObjects();
 
         if (spaceship) {
-            //console.log("spaceshipBox.quaternion");
-            //console.log(controls.totalRotation);
             spaceshipMovement();
             spaceship.position.copy(spaceshipBox.position);
-            //spaceship.quaternion.copy(spaceshipBox.quaternion);
         }
         if (debris1 && debris2 && debris3) {
             debris1.position.copy(debris1Box.position);
@@ -231,16 +226,12 @@ function spaceshipMovement() {
         }
     }
 
-    // let rotationSpeed = 0.01;
-    // let quaternion = new CANNON.Quaternion();
     if (controls.up && controls.totalRotation.x > -30) {
         spaceshipBox.velocity.y -= 0.01 * spaceshipBox.velocity.z;
         spaceship.rotation.x += Math.PI/180;
         spaceshipBox.quaternion.copy(spaceship.quaternion);
         spaceship.quaternion.copy(spaceshipBox.quaternion);
         controls.totalRotation.x -= 1;
-    } else {
-        //spaceshipBox.velocity.y = 0;
     }
     if (controls.down && controls.totalRotation.x < 30) {
         spaceshipBox.velocity.y += 0.01 * spaceshipBox.velocity.z;
@@ -248,8 +239,6 @@ function spaceshipMovement() {
         spaceshipBox.quaternion.copy(spaceship.quaternion);
         spaceship.quaternion.copy(spaceshipBox.quaternion);
         controls.totalRotation.x += 1;
-    } else {
-        //spaceshipBox.velocity.y = 0;
     }
     if (!controls.down && !controls.up && controls.totalRotation.x !== 0) {
         if (controls.totalRotation.x > 0) {
@@ -287,8 +276,6 @@ function spaceshipMovement() {
         spaceshipBox.quaternion.copy(spaceship.quaternion);
         spaceship.quaternion.copy(spaceshipBox.quaternion);
         controls.totalRotation.z -= 1;
-    } else {
-        //spaceshipBox.velocity.x = 0;
     }
     if (controls.right && controls.totalRotation.z < 30) {
         spaceshipBox.velocity.x -= 0.01 * spaceshipBox.velocity.z;
@@ -296,8 +283,6 @@ function spaceshipMovement() {
         spaceshipBox.quaternion.copy(spaceship.quaternion);
         spaceship.quaternion.copy(spaceshipBox.quaternion);
         controls.totalRotation.z += 1;
-    } else {
-        //spaceshipBox.velocity.x = 0;
     }
     spaceshipBox.quaternion.y = 1;
 }
@@ -317,80 +302,19 @@ window.addEventListener('resize', function () {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-//
-// const pointer = new THREE.Vector2();
-// const clicker = new THREE.Vector2();
-// const collectedItems = [];
-// const raycaster = new THREE.Raycaster();
-// function onMouseMove(event) {
-//     pointer.x = (event.clientX / window.innerWidth) * 2-1;
-//     pointer.y = -(event.clientY / window.innerHeight) * 2+1;
-// }
-// window.addEventListener('mousemove', onMouseMove, false);
-// window.addEventListener('click', event => {
-//     clicker.x = (event.clientX / window.innerWidth) * 2-1;
-//     clicker.y = -(event.clientY / window.innerHeight) * 2+1;
-//     raycaster.setFromCamera(clicker, camera);
-//     const intersects = raycaster.intersectObjects(scene.children);
-//     if (intersects.length > 0) {
-//         if (intersects[0].object.name.startsWith("Object_2")) {
-//             collectedItems.push(intersects[0]);
-//             console.log(intersects);
-//         }
-//     }
-// });
-
-//var childArray = [];
-
-// // i always wanted to write +20 lines of code for a simple outline effect
-// const composer = new EffectComposer(renderer);
-// const renderPass = new RenderPass(scene, camera);
-// composer.addPass(renderPass);
-
-// const outliner = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
-// outliner.edgeThickness = 2.0;
-// outliner.edgeStrength = 3.0;
-// outliner.visibleEdgeColor.set(0xfffba2); // try 255, 251, 162
-// composer.addPass(outliner);
-//
-// const textureLoader = new THREE.TextureLoader();
-// textureLoader.load("./three.js-master/examples/textures/tri_pattern.jpg", function (texture) {
-//     if (texture) {
-//         outliner.patternTexture = texture;
-//         texture.wrapS = THREE.RepeatWrapping;
-//         texture.wrapT = THREE.RepeatWrapping;
-//     }
-//     else {
-//         console.log("Texture does not exist!");
-//     }
-// })
-
-// const fxaaShader = new ShaderPass(FXAAShader);
-// fxaaShader.uniforms["resolution"].value.set(1/window.innerWidth, 1/window.innerHeight);
-// composer.addPass(fxaaShader);
 
 function selectObjects() {
-    // raycaster.setFromCamera(pointer, camera);
-    // const intersects = raycaster.intersectObjects(scene.children);
-    // //console.log(intersects);
-    //
-    // if (intersects.length > 0) {
-    //     if (intersects[0].object.name.startsWith("Object_2")) {
-    //         childArray.push(intersects[0])
-    //
-    //         outliner.selectedObjects.push(intersects[0]);
-    //         intersects[0].object.material.transparent = true;
-    //         intersects[0].object.material.opacity = 0.5;
-    //     }
-    // } else if (childArray.length > 0) {
-    //     while (childArray.length > 0) {
-    //         childArray[0].object.material.opacity = 1;
-    //         childArray[0].transparent = false;
-    //         childArray.shift();
-    //         //outliner.selectedObjects.shift();
-    //     }
-    //
-    // }
+
+    let d = 0;
+    for (let i = 0; i < collectableItems.length; i++) {
+        d = distance(spaceship, collectableItems[i].model);
+        if (d <= controls.collectableRadius) {
+            console.log("COLLECTED!");
+            scene.remove(collectableItems[i].model);
+            world.removeBody(collectableItems[i].body);
+            scene.remove(collectableItems[i].body);
+        }
+    }
 }
 
 
@@ -419,6 +343,11 @@ window.addEventListener('keydown', function (e) {
             break;
         case 'Escape':
             controls.pause = !controls.pause;
+            break;
+        case  'KeyE':
+            if (spaceship) {
+                selectObjects();
+            }
             break;
     }
 });
@@ -502,11 +431,22 @@ function loadModel(modelName, path, position, scale, rotation, mass, castShadow,
             }
         }
         if (isCollectable) {
-            collectableItems.push({model, body});
+            collectableItems.push({
+                model: model,
+                body: body
+            });
         }
     }, undefined, function (error) {
         console.error(error);
     });
+}
+
+function distance(obj1, obj2) {
+    let dx = obj1.position.x - obj2.position.x;
+    let dy = obj1.position.y - obj2.position.y;
+    let dz = obj1.position.z - obj2.position.z;
+
+    return Math.sqrt( dx * dx + dy * dy + dz * dz );
 }
 
 function generateSpaceJunk() {
