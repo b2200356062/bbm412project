@@ -4,15 +4,12 @@ import * as CANNON from 'cannon-es';
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {randFloatSpread} from "three/src/math/MathUtils";
 import {clone} from "three/addons/utils/SkeletonUtils";
-import {OutlinePass} from "three/examples/jsm/postprocessing/OutlinePass.js";
-import {FXAAShader} from "three/examples/jsm/shaders/FXAAShader.js";
 import {Mesh, MeshBasicMaterial, TextureLoader} from "three";
 import {PointerLockControls} from "three/addons/controls/PointerLockControls.js";
 import Stats from "three/addons/libs/stats.module.js";
 import {EffectComposer, RenderPass, ShaderPass} from "three/addons";
-//import {World} from 'cannon-es'
+import {World} from 'cannon-es'
 
-// todo: add ui for speed and tuş atamaları
 // todo: add oscillation animation for low speed turns and tedious movements
 // todo: rotate the ship around the world
 
@@ -29,8 +26,8 @@ const world = new CANNON.World({
 const timeStep = 1/60;
 
 var urls = [
-    'rsc/GLTF/Spaceship_FernandoTheFlamingo.gltf',
-    'rsc/mikuGLTF/scene.gltf',
+    '',
+    '',
     'rsc/triangleGLTF/scene.gltf',
     'rsc/blueRock/scene.gltf',
     'rsc/maintRobot/scene.gltf',
@@ -40,6 +37,86 @@ var urls = [
     'rsc/lowPolyShip/scene.gltf',
     'rsc/lowPolyEarth/scene.gltf',
 ]
+
+// UI
+// var img = document.createElement('img');
+// img.src ='rsc/ui/card1/cardx1.png';
+// img.style.width = '300px';
+// img.style.height = '500px';
+
+var div = document.createElement('div');
+//div.appendChild(img);
+div.style.position = 'absolute';
+div.style.top = '40px';
+div.style.left = '10px';
+div.style.width = '250px';
+div.style.height = '600px';
+div.style.backgroundImage = 'url(ui/card1/cardx1.png)';
+div.style.backgroundSize = 'cover';
+div.style.color = 'white';
+div.style.padding = '40px';
+div.style.fontFamily = 'monospace';
+div.style.fontSize = '17px';
+div.style.display = 'block';
+var text = document.createTextNode('Welcome to Orbital Cleaning Program!');
+var text1 = document.createTextNode('You are one of the lucky chosen destined to save humanity\'s future.');
+var text2 = document.createTextNode('Collect all the junk you can, and be vary of rocks.');
+var text3 = document.createTextNode('Use ASDW keys to move in space and press E to collect an object when close to it.');
+var text4 = document.createTextNode('Hold SPACE to speed up and LeftShift to slow down.');
+var text5 = document.createTextNode('Press ESC to pause the game.');
+var text6 = document.createTextNode('Press T to toggle this message.');
+
+var junkCounter = 0;
+var junkCounterTXT = document.createTextNode('Collected Junk: ' + junkCounter);
+div.appendChild(junkCounterTXT);
+var newline = document.createElement('div');
+newline.style.height = '15px';
+div.appendChild(newline);
+var health = 100;
+var healthText = document.createTextNode('Health: %' + health);
+div.appendChild(healthText);
+var newline = document.createElement('div');
+newline.style.height = '20px';
+div.appendChild(newline);
+div.appendChild(text);
+newline = document.createElement('div');
+newline.style.height = '20px';
+div.appendChild(newline);
+div.appendChild(text1);
+newline = document.createElement('div');
+newline.style.height = '20px';
+div.appendChild(newline);
+div.appendChild(text2);
+newline = document.createElement('div');
+newline.style.height = '20px';
+div.appendChild(newline);
+div.appendChild(text3);
+newline = document.createElement('div');
+newline.style.height = '20px';
+div.appendChild(newline);
+div.appendChild(text4);
+newline = document.createElement('div');
+newline.style.height = '20px';
+div.appendChild(newline);
+div.appendChild(text5);
+newline = document.createElement('div');
+newline.style.height = '20px';
+div.appendChild(newline);
+div.appendChild(text6);
+document.body.appendChild(div);
+let hud = true;
+window.addEventListener('keydown', (event) => {
+    if(event.key === 't'){
+        hud = !hud;
+        if(!hud){
+            document.body.removeChild(div);
+        }
+        if(hud){
+            document.body.appendChild(div);
+        }
+    }
+});
+
 
 
 // import ship files
@@ -70,7 +147,7 @@ var cameraControls = new PointerLockControls(camera, renderer.domElement);
 
 const assetLoader = new GLTFLoader();
 var spaceship, spaceshipBox;
-loadModel("spaceship", shipUrl.href, new THREE.Vector3(0, 5, 0), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, -1 * Math.PI, 0), 5, true, true);
+loadModel("spaceship", shipUrl.href, new THREE.Vector3(0, 5, 0), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, -1 * Math.PI, 0), 100, true, true);
 var debris1, debris1Box;
 loadModel("debris1", debris1Url.href, new THREE.Vector3(0, 5, -500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true, true);
 var debris2, debris2Box;
@@ -78,9 +155,9 @@ loadModel("debris2", debris1Url.href, new THREE.Vector3(-25, 30, -750), new THRE
 var debris3, debris3Box;
 loadModel("debris3", debris1Url.href, new THREE.Vector3(25, -50, -1000), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 20, true, true, false);
 var earth, earthBox;
-loadModel("earth", earthUrl.href, new THREE.Vector3(3400, 2, -750), new THREE.Vector3(20, 20, 20), new THREE.Euler(0, 0, 0), 10000, true, true);
+loadModel("earth", earthUrl.href, new THREE.Vector3(3400, 2, -750), new THREE.Vector3(20, 20, 20), new THREE.Euler(0, 0, 0), 100000, true, true);
 var sun, sunBox;
-loadModel("sun", sunUrl.href, new THREE.Vector3(-1000, 200, -1500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 10000, true, true);
+loadModel("sun", sunUrl.href, new THREE.Vector3(-1000, 200, -1500), new THREE.Vector3(1, 1, 1), new THREE.Euler(0, 0, 0), 1, true, true);
 var moon, moonBox;
 loadModel("moon", moonUrl.href, new THREE.Vector3(0, -200, 900), new THREE.Vector3(400, 400, 400), new THREE.Euler(0, 0, 0), 100000, true, true);
 
@@ -209,11 +286,11 @@ function spaceshipMovement() {
         if (controls.speed >= controls.maxSpeed/2) {
             leftPLight.power += 1;
             rightPLight.power += 1;
-            spaceshipBox.velocity.z -= 0.5;
+            spaceshipBox.velocity.z -= 1;
         } else if (controls.speed < controls.maxSpeed/2 && controls.speed >= controls.maxSpeed) {
             leftPLight.power += 1;
             rightPLight.power += 1;
-            spaceshipBox.velocity.z -= 0.25;
+            spaceshipBox.velocity.z -= 0.5;
         }
     }
     if (controls.slowDown) {
@@ -222,25 +299,26 @@ function spaceshipMovement() {
         if (controls.speed > controls.minSpeed) {
             leftPLight.power -= 1;
             rightPLight.power -= 1;
-            spaceshipBox.velocity.z += 0.5;
+            spaceshipBox.velocity.z += 1;
         }
     }
 
     if (controls.up && controls.totalRotation.x > -30) {
-        spaceshipBox.velocity.y -= 0.01 * spaceshipBox.velocity.z;
+        spaceshipBox.velocity.y -= 0.02 * spaceshipBox.velocity.z;
         spaceship.rotation.x += Math.PI/180;
         spaceshipBox.quaternion.copy(spaceship.quaternion);
         spaceship.quaternion.copy(spaceshipBox.quaternion);
         controls.totalRotation.x -= 1;
     }
     if (controls.down && controls.totalRotation.x < 30) {
-        spaceshipBox.velocity.y += 0.01 * spaceshipBox.velocity.z;
+        spaceshipBox.velocity.y += 0.02 * spaceshipBox.velocity.z;
         spaceship.rotation.x -= Math.PI/180;
         spaceshipBox.quaternion.copy(spaceship.quaternion);
         spaceship.quaternion.copy(spaceshipBox.quaternion);
         controls.totalRotation.x += 1;
     }
     if (!controls.down && !controls.up && controls.totalRotation.x !== 0) {
+        //spaceshipBox.velocity.y = 0;
         if (controls.totalRotation.x > 0) {
             spaceship.rotation.x += Math.PI/180;
             spaceshipBox.quaternion.copy(spaceship.quaternion);
@@ -256,6 +334,7 @@ function spaceshipMovement() {
     }
 
     if (!controls.left && !controls.right && controls.totalRotation.z !== 0) {
+        //spaceshipBox.velocity.x = 0;
         if (controls.totalRotation.z > 0) {
             spaceship.rotation.z -= Math.PI/450 + 0.01;
             spaceshipBox.quaternion.copy(spaceship.quaternion);
@@ -271,14 +350,14 @@ function spaceshipMovement() {
     }
 
     if (controls.left && controls.totalRotation.z > -30) {
-        spaceshipBox.velocity.x += 0.01 * spaceshipBox.velocity.z;
+        spaceshipBox.velocity.x += 0.02 * spaceshipBox.velocity.z;
         spaceship.rotation.z -= Math.PI/450 + 0.01;
         spaceshipBox.quaternion.copy(spaceship.quaternion);
         spaceship.quaternion.copy(spaceshipBox.quaternion);
         controls.totalRotation.z -= 1;
     }
     if (controls.right && controls.totalRotation.z < 30) {
-        spaceshipBox.velocity.x -= 0.01 * spaceshipBox.velocity.z;
+        spaceshipBox.velocity.x -= 0.02 * spaceshipBox.velocity.z;
         spaceship.rotation.z += Math.PI/450 + 0.01;
         spaceshipBox.quaternion.copy(spaceship.quaternion);
         spaceship.quaternion.copy(spaceshipBox.quaternion);
@@ -286,6 +365,9 @@ function spaceshipMovement() {
     }
     spaceshipBox.quaternion.y = 1;
 }
+// spaceshipBox.addEventListener("collide", function (event) {
+//     console.log(event);
+// })
 
 document.getElementById("Play").onclick = () => {
     cameraControls.lock();
@@ -309,12 +391,22 @@ function selectObjects() {
     for (let i = 0; i < collectableItems.length; i++) {
         d = distance(spaceship, collectableItems[i].model);
         if (d <= controls.collectableRadius) {
-            console.log("COLLECTED!");
+            junkCounter += 1;
+            junkCounterTXT.nodeValue = 'Collected Junk: ' + junkCounter;
             scene.remove(collectableItems[i].model);
             world.removeBody(collectableItems[i].body);
             scene.remove(collectableItems[i].body);
+            collectableItems.splice(i, 1);
         }
     }
+}
+
+function distance (obj1, obj2) {
+    let dx = obj1.position.x - obj2.position.x;
+    let dy = obj1.position.y - obj2.position.y;
+    let dz = obj1.position.z - obj2.position.z;
+
+    return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2) + Math.pow(dz, 2) );
 }
 
 
@@ -347,6 +439,11 @@ window.addEventListener('keydown', function (e) {
         case  'KeyE':
             if (spaceship) {
                 selectObjects();
+            }
+            break;
+        case  'KeyQ':
+            if (spaceship) {
+                spaceshipBox.velocity.z = 0;
             }
             break;
     }
@@ -392,7 +489,7 @@ function loadModel(modelName, path, position, scale, rotation, mass, castShadow,
 
         const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
-        const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
+        const shape = new CANNON.Box(new CANNON.Vec3(size.x/2 , size.y/2 , size.z/2 ));
         body = new CANNON.Body({ mass: mass });
         body.addShape(shape);
         body.position.copy(model.position);
@@ -408,6 +505,7 @@ function loadModel(modelName, path, position, scale, rotation, mass, castShadow,
             spaceshipBox = body;
             //spaceship.tag = "spaceship";
             spaceshipBox.angularDamping = 1;
+            //spaceshipBox.linearDamping = 0.5;
             spaceshipBox.velocity = new CANNON.Vec3(0, 0, -25);
         }
 
@@ -447,14 +545,6 @@ function loadModel(modelName, path, position, scale, rotation, mass, castShadow,
     }, undefined, function (error) {
         console.error(error);
     });
-}
-
-function distance(obj1, obj2) {
-    let dx = obj1.position.x - obj2.position.x;
-    let dy = obj1.position.y - obj2.position.y;
-    let dz = obj1.position.z - obj2.position.z;
-
-    return Math.sqrt( dx * dx + dy * dy + dz * dz );
 }
 
 function generateSpaceJunk() {
@@ -572,30 +662,25 @@ let mixer;
 let moonTheta = 0;
 function update() {
     //controls.update(); // mouse update
-    console.log("turning both");
 
     if (mixer) {
         mixer.update(0.01);
     }
     if (earth) {
-        console.log("turning earth");
         earthBox.angularVelocity.set(0, 0.02, 0);
         earth.quaternion.copy(earthBox.quaternion);
     }
 
     if (moon && earth) {
-        console.log("turning moon");
-
         moonBox.angularVelocity.set(0, 0.02, 0)
         moonTheta += 0.001;
         const s = Math.sin(moonTheta);
         const c = Math.cos(moonTheta);
-        moonBox.position.x = 20 * (c - s) - earth.position.x/2;
-        moonBox.position.z = 20 * (s + c) - earth.position.z/2;
-        moonBox.position.y = -600;
+        moonBox.position.set(40 * (c - s) - earth.position.x/2, -600, 30 * (s + c) - earth.position.z/2 );
+        moon.position.copy(moonBox.position);
 
         moon.quaternion.copy(moonBox.quaternion);
-        moon.position.copy(moonBox.position);
+
     }
 }
 function generateRandPos(rangeX, rangeY, rangeZ) {
@@ -604,6 +689,7 @@ function generateRandPos(rangeX, rangeY, rangeZ) {
     let z = THREE.MathUtils.randFloatSpread( rangeZ );
     return {x, y, z};
 }
+
 function removeSpaceJunk() {
     for (let i = 0; i < currentJunkCount; i++) {
         scene.remove(scene.getObjectByName("junk"));
