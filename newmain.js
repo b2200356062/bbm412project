@@ -1,4 +1,4 @@
-import spaceScene  from './spacescene.js';
+import spaceScene  from './script.js';
 import tableScene from './tablescene.js';
 import Stats from "three/addons/libs/stats.module.js";
 import * as THREE from 'three';
@@ -9,25 +9,27 @@ import * as THREE from 'three';
 
 let renderer = new THREE.WebGLRenderer();
 let modelsLoaded = false;
-let currentScene = 'table'; // Set the initial scene
+let currentScene = 'space'; // Set the initial scene
 
-let { render: tableRender, update: tableUpdate, scene: tableSceneObj, camera: tableCamera, gui } = tableScene(renderer);
-//let { render: spaceRender, update: spaceUpdate, scene: spaceSceneObj, camera: spaceCamera, earthloader, sunloader } = spaceScene(renderer);
+let { render: tableRender, update: tableUpdate, scene: tableSceneObj, camera: tableCamera, gui: tableGui } = tableScene(renderer);
+let { render: spaceRender, update: spaceUpdate, scene: spaceSceneObj, camera: spaceCamera, gui: spaceGui, switchscene} = spaceScene(renderer);
 
 let scenes = {
-    'table': { render: tableRender, update: tableUpdate, scene: tableSceneObj, camera: tableCamera },
-    //'space': { render: spaceRender, update: spaceUpdate, scene: spaceSceneObj, camera: spaceCamera}
+    'table': { render: tableRender, update: tableUpdate, scene: tableSceneObj, camera: tableCamera, gui: tableGui},
+    'space': { render: spaceRender, update: spaceUpdate, scene: spaceSceneObj, camera: spaceCamera, gui: spaceGui, switchscene: switchscene}
 };
 
+if(switchScene){
 
+}
 // Promise.all([earthloader, sunloader]).then(() => {
-    
+
 //     modelsLoaded = true;
 // }).catch((error) => {
 //     console.error('An error occurred while loading the models:', error);
 // });
 
-requestAnimationFrame(render);
+render();
 
 function switchScene(sceneName) {
     // Check if the scene exists
@@ -42,10 +44,10 @@ function switchScene(sceneName) {
 window.addEventListener('keydown', (event) => {
     if (event.key === '1') {
         switchScene('table');
-        gui.show();
+
     } else if (event.key === '2') {
         switchScene('space');
-        gui.hide();
+
     }
 });
 
@@ -61,8 +63,17 @@ window.addEventListener('resize', function () {
 });
 
 function render() {
-    scenes[currentScene].update();
-    scenes[currentScene].render();
+    if (currentScene === 'space') {
+        scenes['space'].update();
+        scenes['space'].render();
+        tableGui.hide();
+        spaceGui.show();
 
+    } else if (currentScene === 'table') {
+        scenes['table'].update();
+        scenes['table'].render();
+        tableGui.show();
+        spaceGui.hide();
+    }
     requestAnimationFrame(render);
 }

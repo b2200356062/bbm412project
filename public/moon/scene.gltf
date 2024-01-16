@@ -3,32 +3,32 @@
     {
       "bufferView": 2,
       "componentType": 5126,
-      "count": 10199,
+      "count": 559,
       "max": [
-        10.0,
-        9.999995231628418,
-        10.0
+        0.9997513294219971,
+        0.9997515082359314,
+        1.0
       ],
       "min": [
-        -9.999996185302734,
-        -9.999999046325684,
-        -10.0
+        -0.9997517466545105,
+        -0.9997521638870239,
+        -1.0
       ],
       "type": "VEC3"
     },
     {
       "bufferView": 2,
-      "byteOffset": 122388,
+      "byteOffset": 6708,
       "componentType": 5126,
-      "count": 10199,
+      "count": 559,
       "max": [
-        1.0,
-        1.0,
+        0.9997525215148926,
+        0.9997525215148926,
         1.0
       ],
       "min": [
-        -1.0,
-        -1.0,
+        -0.9997525215148926,
+        -0.9997525215148926,
         -1.0
       ],
       "type": "VEC3"
@@ -36,9 +36,9 @@
     {
       "bufferView": 1,
       "componentType": 5126,
-      "count": 10199,
+      "count": 559,
       "max": [
-        0.9999993443489075,
+        1.0000001192092896,
         1.0
       ],
       "min": [
@@ -50,84 +50,134 @@
     {
       "bufferView": 0,
       "componentType": 5125,
-      "count": 59400,
+      "count": 2880,
       "type": "SCALAR"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 249,
+      "max": [
+        8.266666412353516
+      ],
+      "min": [
+        0.0
+      ],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 249,
+      "max": [
+        0.5,
+        0.7071067690849304,
+        0.7071067690849304,
+        0.7071067690849304
+      ],
+      "min": [
+        -0.7071067690849304,
+        -0.5,
+        -0.5,
+        -0.5
+      ],
+      "type": "VEC4"
+    }
+  ],
+  "animations": [
+    {
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "node": 4,
+            "path": "rotation"
+          }
+        }
+      ],
+      "name": "moon|moonAction",
+      "samplers": [
+        {
+          "input": 4,
+          "interpolation": "LINEAR",
+          "output": 5
+        }
+      ]
     }
   ],
   "asset": {
     "extras": {
-      "author": "ayushcodemate (https://sketchfab.com/ayushcodemate)",
+      "author": "albert_buscio (https://sketchfab.com/albert_buscio)",
       "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
-      "source": "https://sketchfab.com/3d-models/moon-with-2k-textures-450aeb7763dc49d0a176ace339b999ec",
-      "title": "Moon With 2K Textures"
+      "source": "https://sketchfab.com/3d-models/ps1-style-low-poly-moon-a0800eda5580488092cbb48c415180a9",
+      "title": "PS1 style low poly Moon"
     },
-    "generator": "Sketchfab-15.55.0",
+    "generator": "Sketchfab-14.10.0",
     "version": "2.0"
   },
   "bufferViews": [
     {
       "buffer": 0,
-      "byteLength": 237600,
+      "byteLength": 11520,
       "name": "floatBufferViews",
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteLength": 81592,
-      "byteOffset": 237600,
+      "byteLength": 4472,
+      "byteOffset": 11520,
       "byteStride": 8,
       "name": "floatBufferViews",
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteLength": 244776,
-      "byteOffset": 319192,
+      "byteLength": 13416,
+      "byteOffset": 15992,
       "byteStride": 12,
       "name": "floatBufferViews",
       "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 996,
+      "byteOffset": 29408,
+      "name": "floatBufferViews"
+    },
+    {
+      "buffer": 0,
+      "byteLength": 3984,
+      "byteOffset": 30404,
+      "byteStride": 16,
+      "name": "floatBufferViews"
     }
   ],
   "buffers": [
     {
-      "byteLength": 563968,
+      "byteLength": 34388,
       "uri": "scene.bin"
     }
   ],
-  "extensionsUsed": [
-    "KHR_materials_specular"
-  ],
   "images": [
     {
-      "uri": "textures/material_baseColor.png"
+      "uri": "textures/Moon_baseColor.jpeg"
     }
   ],
   "materials": [
     {
       "doubleSided": true,
-      "extensions": {
-        "KHR_materials_specular": {
-          "specularColorFactor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "specularFactor": 0.0
-        }
-      },
-      "name": "material",
+      "name": "Moon",
       "pbrMetallicRoughness": {
         "baseColorTexture": {
           "index": 0
         },
-        "metallicFactor": 0.0,
-        "roughnessFactor": 0.9249551998634662
+        "metallicFactor": 0.0
       }
     }
   ],
   "meshes": [
     {
-      "name": "node_id30_50_0",
+      "name": "moon_Moon_0",
       "primitives": [
         {
           "attributes": {
@@ -189,65 +239,40 @@
         0.0,
         1.0
       ],
-      "name": "8053fa878d644366b93f3d36d800abde.fbx"
+      "name": "Low Poly Moon.fbx"
     },
     {
       "children": [
         3
       ],
-      "name": "RootNode"
+      "name": "Object_2"
     },
     {
       "children": [
         4
       ],
-      "matrix": [
-        100.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        -1.629206793918314e-05,
-        -99.99999999999868,
-        0.0,
-        0.0,
-        99.99999999999868,
-        -1.629206793918314e-05,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        1.0
-      ],
-      "name": "root"
+      "name": "RootNode"
     },
     {
       "children": [
         5
       ],
-      "matrix": [
-        0.025599999353289604,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.025599999353289604,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.025599999353289604,
-        0.0,
-        -3.8146975356312396e-08,
-        -0.25599995255470276,
-        6.617444900424222e-24,
-        1.0
+      "name": "moon",
+      "rotation": [
+        -0.6975402235984802,
+        0.11592091619968414,
+        0.11592092365026474,
+        0.6975401639938354
       ],
-      "name": "node_id30"
+      "scale": [
+        100.0,
+        100.0,
+        100.0
+      ]
     },
     {
       "mesh": 0,
-      "name": "node_id30_50_0"
+      "name": "moon_Moon_0"
     }
   ],
   "samplers": [
