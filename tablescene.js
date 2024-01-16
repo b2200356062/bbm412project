@@ -394,8 +394,6 @@ Promise.all([
             // Disable physics
             selectedObject.userData.physicsBody.type = CANNON.Body.KINEMATIC;
         }
-
-
     }, false);
     
     window.addEventListener('mousemove', (event) => {
