@@ -77,7 +77,7 @@ var text2 = document.createTextNode('You can use mouse to move objects. Becarefu
 var text3 = document.createTextNode('Press F and click on the object you want inspect');
 var text4 = document.createTextNode('In inspection mode you can use mouse to rotate the object. After inspecting, use mouse to put it where you want.');
 var text5 = document.createTextNode('You should put the aliminum and steel objects to their respective bins, you can get hints from objects info. Otherwise you will not get any points!');
-var text6 = document.createTextNode('Press T to hide/show the UI - Press H to hide/show the GUI for spotlight');
+var text6 = document.createTextNode('Press T to toggle between the UI - Press H to hide/show the GUI for spotlight');
 var points = 0;
 var pointsText = document.createTextNode('Points: ' + points);
 div.appendChild(pointsText);
@@ -110,15 +110,16 @@ newline.style.height = '20px';
 div.appendChild(newline);
 div.appendChild(text6);
 document.body.appendChild(div);
-let hud = true;
+let hud = false;
+div.style.display = 'none'
 window.addEventListener('keydown', (event) => {
     if(event.key === 't'){
         hud = !hud;
         if(!hud){
-            document.body.removeChild(div);
+            div.style.display = 'none';
         }
         if(hud){
-            document.body.appendChild(div);
+            div.style.display = 'block';
         }
     }
 });
@@ -759,18 +760,18 @@ window.addEventListener('keydown', (event) =>{
             }
             camera.position.z += 5;
             break;
-        case 'KeyQ':
-            if(camera.position.y > 10){
-                break;
-            }
-            camera.position.y += 5;
-            break;
-        case 'KeyE':
-            if(camera.position.y < -10){
-                break;
-            }
-            camera.position.y -= 5;
-            break;
+        // case 'KeyQ':
+        //     if(camera.position.y > 10){
+        //         break;
+        //     }
+        //     camera.position.y += 5;
+        //     break;
+        // case 'KeyE':
+        //     if(camera.position.y < -10){
+        //         break;
+        //     }
+        //     camera.position.y -= 5;
+        //     break;
         case 'ArrowUp':
             if(lookAtVector.y > 25){
                 break;
@@ -864,6 +865,12 @@ function update(){
 function render(){
     composer.render();
 }
+window.addEventListener('resize', function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
 // return to main
-return {scene, camera, render, update, gui};
+return {scene, camera, render, update, gui, hud};
 }
